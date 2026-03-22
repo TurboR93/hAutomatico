@@ -27,6 +27,9 @@ dist-ssr
 .claude/
 .agent/
 
+# Build archives
+*.zip
+
 
 
 
