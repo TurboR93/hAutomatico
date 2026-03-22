@@ -47,6 +47,26 @@ const Visione = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Irregular wavy yellow border overlapping onto Missione section */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden" style={{ marginBottom: '-1px' }}>
+        <svg
+          viewBox="0 0 1200 120"
+          preserveAspectRatio="none"
+          className="absolute bottom-0 left-0 w-full h-full"
+          style={{ display: 'block' }}
+        >
+          <path
+            d="M0,40 C100,80 200,10 350,50 C500,90 550,20 700,60 C850,100 950,30 1050,70 C1150,110 1200,40 1200,40 L1200,120 L0,120 Z"
+            fill="#FDF07A"
+          />
+          <path
+            d="M0,60 C80,90 180,30 300,65 C420,100 520,40 650,75 C780,110 880,50 1000,80 C1120,110 1200,60 1200,60 L1200,120 L0,120 Z"
+            fill="#FDF07A"
+            opacity="0.7"
+          />
+        </svg>
+      </div>
     </section>
   )
 }

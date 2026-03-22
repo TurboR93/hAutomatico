@@ -11,27 +11,32 @@ const Hero = () => {
     offset: ['start start', 'end start']
   })
 
-  // Text 1: "RIVOLUZIONIAMO" - fades in immediately and stays
-  const text1Opacity = useTransform(scrollYProgress, [0, 0.1], [0, 1])
-  const text1Y = useTransform(scrollYProgress, [0, 0.1], [30, 0])
+  // Logo intro: starts fully visible, moves up and fades out
+  const logoOpacity = useTransform(scrollYProgress, [0, 0.08, 0.15], [1, 1, 0])
+  const logoY = useTransform(scrollYProgress, [0, 0.15], [0, -150])
+  const logoScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.8])
+
+  // Text 1: "RIVOLUZIONIAMO" - fades in after logo starts leaving
+  const text1Opacity = useTransform(scrollYProgress, [0.12, 0.22], [0, 1])
+  const text1Y = useTransform(scrollYProgress, [0.12, 0.22], [30, 0])
 
   // Text 2: "LA TECNOLOGIA" - fades in after text 1 and stays
-  const text2Opacity = useTransform(scrollYProgress, [0.2, 0.4], [0, 1])
-  const text2Y = useTransform(scrollYProgress, [0.2, 0.4], [30, 0])
+  const text2Opacity = useTransform(scrollYProgress, [0.28, 0.42], [0, 1])
+  const text2Y = useTransform(scrollYProgress, [0.28, 0.42], [30, 0])
 
   // Text 3: "AL TUO SERVIZIO" - fades in last and stays
-  const text3Opacity = useTransform(scrollYProgress, [0.5, 0.7], [0, 1])
-  const text3Y = useTransform(scrollYProgress, [0.5, 0.7], [30, 0])
+  const text3Opacity = useTransform(scrollYProgress, [0.5, 0.65], [0, 1])
+  const text3Y = useTransform(scrollYProgress, [0.5, 0.65], [30, 0])
 
   // Background parallax and scale
   const bgY = useTransform(scrollYProgress, [0, 1], [0, -80])
   const bgScale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.02, 1.04])
 
-  // Service images opacity based on scroll
-  const img1Opacity = useTransform(scrollYProgress, [0.05, 0.15, 0.35, 0.5], [0, 0.6, 0.6, 0.3])
-  const img2Opacity = useTransform(scrollYProgress, [0.25, 0.4, 0.55, 0.7], [0, 0.6, 0.6, 0.3])
-  const img3Opacity = useTransform(scrollYProgress, [0.45, 0.6, 0.75, 0.9], [0, 0.6, 0.6, 0.4])
-  const img4Opacity = useTransform(scrollYProgress, [0.55, 0.7, 0.85, 1], [0, 0.5, 0.5, 0.5])
+  // Service images opacity based on scroll (delayed to appear after logo transition)
+  const img1Opacity = useTransform(scrollYProgress, [0.15, 0.25, 0.4, 0.55], [0, 0.6, 0.6, 0.3])
+  const img2Opacity = useTransform(scrollYProgress, [0.3, 0.42, 0.55, 0.7], [0, 0.6, 0.6, 0.3])
+  const img3Opacity = useTransform(scrollYProgress, [0.48, 0.6, 0.75, 0.88], [0, 0.6, 0.6, 0.4])
+  const img4Opacity = useTransform(scrollYProgress, [0.58, 0.7, 0.85, 1], [0, 0.5, 0.5, 0.5])
 
   // Random positions for service images
   const serviceImagePositions = [
@@ -277,6 +282,16 @@ const Hero = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                {/* Logo overlay on first image */}
+                {index === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img
+                      src="/hautomatico/logohAutomatico.png"
+                      alt="hAutomatico Logo"
+                      className="w-3/4 h-3/4 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+                    />
+                  </div>
+                )}
               </motion.div>
             )
           })}
@@ -332,6 +347,28 @@ const Hero = () => {
               }}
             />
           ))}
+        </motion.div>
+
+        {/* Logo Intro - First thing visible, scrolls up and fades */}
+        <motion.div
+          className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+          style={{
+            opacity: logoOpacity,
+            y: logoY,
+            scale: logoScale,
+          }}
+        >
+          <div className="relative w-[105vw] max-w-3xl h-[105vw] max-h-[80vh] flex items-center justify-center">
+            <img
+              src="/hautomatico/logohAutomatico.png"
+              alt="hAutomatico Logo"
+              className="relative w-full h-full object-contain"
+              style={{
+                mixBlendMode: 'multiply',
+                filter: 'brightness(1.1) contrast(1.1)',
+              }}
+            />
+          </div>
         </motion.div>
 
         {/* Text Overlay Container - Stacked text lines */}

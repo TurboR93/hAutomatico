@@ -58,17 +58,19 @@ const Header = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-          ? 'bg-[#FDF07A]/90 backdrop-blur-md shadow-lg'
-          : 'bg-[#FDF07A]'
+        ? 'bg-[#FDF07A]/90 backdrop-blur-md shadow-lg'
+        : 'bg-[#FDF07A]'
         }`}
     >
-      <nav className="container mx-auto px-6 py-4">
+      <nav className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <div className="w-12 h-12 bg-[#D03F29] rounded-lg flex items-center justify-center">
-              <span className="text-white text-2xl font-black">A</span>
-            </div>
+            <img
+              src="/hautomatico/logohAutomatico-red.png"
+              alt="hAutomatico Logo"
+              className="h-14 w-auto object-contain"
+            />
           </Link>
 
           {/* Navigation Links - Desktop */}
