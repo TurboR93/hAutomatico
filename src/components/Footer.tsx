@@ -17,8 +17,10 @@ const Footer = () => {
           <div className="max-w-sm">
             <h3 className="text-base font-black uppercase mb-1">HAUTOMATICO</h3>
             <p className="text-[10px] leading-tight text-black/70">
-              La \"h\" di hAutomatico richiama la costante di Planck, rendendo l'automazione
-              più efficiente, precisa e misurabile.
+              La "h" di hAutomatico richiama la costante di Planck, ovvero il simbolo della
+              più piccola delle quantità. Il progetto opera proprio così: riduce processi
+              complessi nel loro "quanto" fondamentale, rendendo l'automazione più efficiente,
+              precisa e misurabile.
             </p>
           </div>
 

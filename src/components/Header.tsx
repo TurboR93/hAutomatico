@@ -10,16 +10,21 @@ interface NavLink {
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
+      // Show navbar only after scrolling past the logo intro (~15% of viewport height)
+      setIsVisible(window.scrollY > window.innerHeight * 0.15 || location.pathname !== '/')
     }
+    // Show immediately on non-homepage routes
+    setIsVisible(location.pathname !== '/')
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [location.pathname])
 
   // Scroll to section when navigating with hash
   useEffect(() => {
@@ -37,7 +42,7 @@ const Header = () => {
     { label: 'HOME', href: '/' },
     { label: 'SERVIZI', href: '/#servizi' },
     { label: 'PREPARATI', href: '/#preparati' },
-    { label: 'CHI SIAMO', href: '/#chi-siamo' },
+    { label: 'CHI SIAMO', href: '/about' },
   ]
 
   const handleNavClick = (href: string) => {
@@ -55,8 +60,8 @@ const Header = () => {
   return (
     <motion.header
       initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
+      animate={{ y: isVisible ? 0 : -100 }}
+      transition={{ duration: 0.4 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
         ? 'bg-[#FDF07A]/90 backdrop-blur-md shadow-lg'
         : 'bg-[#FDF07A]'
@@ -67,7 +72,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img
-              src="/hautomatico/logohAutomatico-red.png"
+              src="/logohAutomatico-red.png"
               alt="hAutomatico Logo"
               className="h-14 w-auto object-contain"
             />

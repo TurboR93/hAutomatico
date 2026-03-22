@@ -286,7 +286,7 @@ const Hero = () => {
                 {index === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <img
-                      src="/hautomatico/logohAutomatico.png"
+                      src="/logohAutomatico.png"
                       alt="hAutomatico Logo"
                       className="w-3/4 h-3/4 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
                     />
@@ -360,7 +360,7 @@ const Hero = () => {
         >
           <div className="relative w-[105vw] max-w-3xl h-[105vw] max-h-[80vh] flex items-center justify-center">
             <img
-              src="/hautomatico/logohAutomatico.png"
+              src="/logohAutomatico.png"
               alt="hAutomatico Logo"
               className="relative w-full h-full object-contain"
               style={{
