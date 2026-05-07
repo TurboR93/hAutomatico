@@ -124,8 +124,8 @@ const About = () => {
               transition={{ duration: 0.3 }}
             >
               <img
-                src={`${BASE_URL}imgs/d53d22_ffe974_f7f6f3_bd005b_000000_a_minimal_artistic_image_representing_a_complex_software_archite_l12o91nah3zhota28knw_0.png`}
-                alt="Software Architecture"
+                src={`${BASE_URL}imgs/architettura-software-aziendale.webp`}
+                alt="Architettura software aziendale"
                 className="w-full h-auto"
               />
             </motion.div>
@@ -189,8 +189,8 @@ const About = () => {
               transition={{ duration: 0.3 }}
             >
               <img
-                src={`${BASE_URL}imgs/image_describilng_classic_papers_merging_to_digital_elements_p0zf8cekfg5i5ucnpws1_3.png`}
-                alt="Digital Transformation"
+                src={`${BASE_URL}imgs/trasformazione-digitale-aziendale.webp`}
+                alt="Trasformazione digitale aziendale"
                 className="w-full h-auto"
               />
             </motion.div>

@@ -73,8 +73,13 @@ const ServiceDetail = () => {
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase text-[#D03F29] mb-4">
                                 {service.title}
                             </h1>
-                            <p className="text-4xl font-bold text-black mb-6">
-                                {service.price}
+                            <p className="mb-6 text-black">
+                                <span className="block text-base font-medium uppercase tracking-wider opacity-70">
+                                    a partire da
+                                </span>
+                                <span className="text-4xl font-bold">
+                                    {service.price}
+                                </span>
                             </p>
                             <p className="text-lg md:text-xl leading-relaxed text-black/80">
                                 {service.fullDescription}

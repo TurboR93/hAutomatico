@@ -50,8 +50,11 @@ const Services = () => {
               <h3 className="text-2xl font-black uppercase mb-3">
                 {service.title}
               </h3>
-              <p className="text-3xl font-bold mb-4 text-[#FDF07A]">
-                {service.price}
+              <p className="mb-4 text-[#FDF07A]">
+                <span className="block text-sm font-medium uppercase tracking-wider opacity-80">
+                  a partire da
+                </span>
+                <span className="text-3xl font-bold">{service.price}</span>
               </p>
               <p className="text-base leading-relaxed flex-grow mb-6">
                 {service.shortDescription}

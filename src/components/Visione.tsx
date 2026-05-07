@@ -39,8 +39,8 @@ const Visione = () => {
           {/* Right - Image with Ken Burns Effect */}
           <motion.div className="relative overflow-hidden rounded-3xl">
             <motion.img
-              src={`${BASE_URL}imgs/image_describilng_classic_papers_merging_to_digital_elements_5a10xyxgato608l4dplp_0.png`}
-              alt="Matrix Code"
+              src={`${BASE_URL}imgs/digitalizzazione-documenti.webp`}
+              alt="Digitalizzazione documenti cartacei"
               className="w-full h-auto"
               style={{ scale }}
             />

@@ -16,8 +16,8 @@ const Missione = () => {
           {/* Left - Image */}
           <div className="rounded-3xl overflow-hidden">
             <img
-              src={`${BASE_URL}imgs/d53d22_ffe974_f7f6f3_bd005b_000000_a_minimal_artistic_image_representing_a_administrator_in_the_cen_8ugfg51cmh3dbucrj7k3_0.png`}
-              alt="3D Network Illustration"
+              src={`${BASE_URL}imgs/automazione-amministrativa.webp`}
+              alt="Automazione amministrativa aziendale"
               className="w-full h-auto"
             />
           </div>
