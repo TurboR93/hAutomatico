@@ -52,7 +52,7 @@ const Footer = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <p className="text-[9px] text-black/50">P. IVA : 0435993344w</p>
+          <p className="text-[9px] text-black/50">P. IVA : 0435993344</p>
         </motion.div>
       </div>
     </footer>
