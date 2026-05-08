@@ -39,9 +39,7 @@ const Header = () => {
   }, [location])
 
   const navLinks: NavLink[] = [
-    { label: 'HOME', href: '/' },
     { label: 'SERVIZI', href: '/#servizi' },
-    { label: 'PREPARATI', href: '/#preparati' },
     { label: 'CHI SIAMO', href: '/about' },
   ]
 
@@ -70,12 +68,15 @@ const Header = () => {
       <nav className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center gap-3">
             <img
               src="/logohAutomatico-red.png"
               alt="hAutomatico Logo"
               className="h-14 w-auto object-contain"
             />
+            <span className="text-black font-black text-xl md:text-2xl tracking-tight">
+              hAUTOMATICO
+            </span>
           </Link>
 
           {/* Navigation Links - Desktop */}

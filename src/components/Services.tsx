@@ -27,7 +27,6 @@ const Services = () => {
           {services.map((service) => (
             <motion.div
               key={service.id}
-              className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 flex flex-col border border-white/10 shadow-lg group"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -36,37 +35,40 @@ const Services = () => {
                 y: -10,
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               }}
+              className="rounded-3xl"
             >
-              {/* Image */}
-              <div className="w-full aspect-square rounded-2xl overflow-hidden mb-6">
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-              </div>
-
-              {/* Content */}
-              <h3 className="text-2xl font-black uppercase mb-3">
-                {service.title}
-              </h3>
-              <p className="mb-4 text-[#FDF07A]">
-                <span className="block text-sm font-medium uppercase tracking-wider opacity-80">
-                  a partire da
-                </span>
-                <span className="text-3xl font-bold">{service.price}</span>
-              </p>
-              <p className="text-base leading-relaxed flex-grow mb-6">
-                {service.shortDescription}
-              </p>
-
-              {/* Link */}
               <Link
                 to={`/servizi/${service.id}`}
-                className="inline-flex items-center gap-2 text-[#FDF07A] font-bold uppercase hover:gap-4 transition-all"
+                className="bg-white/5 backdrop-blur-sm rounded-3xl p-6 flex flex-col border border-white/10 shadow-lg group h-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FDF07A]"
               >
-                Scopri di più
-                <ArrowRight size={20} />
+                {/* Image */}
+                <div className="w-full aspect-square rounded-2xl overflow-hidden mb-6">
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+
+                {/* Content */}
+                <h3 className="text-2xl font-black uppercase mb-3">
+                  {service.title}
+                </h3>
+                <p className="mb-4 text-[#FDF07A]">
+                  <span className="block text-sm font-medium uppercase tracking-wider opacity-80">
+                    a partire da
+                  </span>
+                  <span className="text-3xl font-bold">{service.price}</span>
+                </p>
+                <p className="text-base leading-relaxed flex-grow mb-6">
+                  {service.shortDescription}
+                </p>
+
+                {/* CTA visivo */}
+                <span className="inline-flex items-center gap-2 text-[#FDF07A] font-bold uppercase transition-all group-hover:gap-4">
+                  Scopri di più
+                  <ArrowRight size={20} />
+                </span>
               </Link>
             </motion.div>
           ))}

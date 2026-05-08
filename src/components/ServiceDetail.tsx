@@ -41,7 +41,7 @@ const ServiceDetail = () => {
                         transition={{ duration: 0.5 }}
                     >
                         <Link
-                            to="/#servizi"
+                            to="/servizi"
                             className="inline-flex items-center gap-2 text-black hover:text-[#D03F29] transition-colors font-bold mb-8"
                         >
                             <ArrowLeft size={20} />
