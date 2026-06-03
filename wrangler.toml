@@ -9,4 +9,4 @@ compatibility_date = "2024-09-23"
 [[d1_databases]]
 binding = "DB"
 database_name = "hautomatico-db"
-database_id = "REPLACE_WITH_DATABASE_ID"
+database_id = "b5298e09-a3d4-4e8a-94d5-730f6ed71835"

@@ -13,7 +13,7 @@
 import { pbkdf2Sync, randomBytes } from 'node:crypto'
 import { createInterface } from 'node:readline'
 
-const ITERATIONS = 310000 // OWASP 2023 per PBKDF2-HMAC-SHA256
+const ITERATIONS = 100000 // massimo consentito da Cloudflare Workers per PBKDF2
 const KEYLEN = 32
 const DIGEST = 'sha256'
 const MIN_LENGTH = 12
