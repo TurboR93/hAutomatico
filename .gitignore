@@ -30,6 +30,12 @@ dist-ssr
 # Build archives
 *.zip
 
+# Cloudflare / Wrangler (D1 locale, secret di sviluppo)
+.wrangler/
+.dev.vars
+*.sqlite
+*.sqlite3
+
 
 
 

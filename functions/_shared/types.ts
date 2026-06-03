@@ -1,0 +1,75 @@
+// Tipi condivisi lato server (Cloudflare Pages Functions / Workers runtime).
+// Tenere allineato con src/admin/types.ts (lato client).
+
+export interface Env {
+  DB: D1Database
+  ADMIN_PASSWORD_HASH: string
+  AUTH_SECRET: string
+}
+
+export type TipoMovimento =
+  | 'pagamento'
+  | 'fattura_emessa'
+  | 'fattura_ricevuta'
+  | 'ritenuta'
+  | 'preventivo'
+
+export const TIPI: TipoMovimento[] = [
+  'pagamento',
+  'fattura_emessa',
+  'fattura_ricevuta',
+  'ritenuta',
+  'preventivo',
+]
+
+// Stati ammessi per ciascun tipo (macchina a stati, validata lato server).
+export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
+  pagamento: ['incassato'],
+  fattura_emessa: ['da_fare', 'emessa', 'pagata'],
+  fattura_ricevuta: ['da_pagare', 'pagata'],
+  ritenuta: ['da_versare', 'versata'],
+  preventivo: ['firmato', 'in_corso', 'completato', 'fatturato'],
+}
+
+export interface Movimento {
+  id: string
+  tipo: TipoMovimento
+  controparte: string | null
+  descrizione: string | null
+  numero: string | null
+  data: string | null
+  data_scadenza: string | null
+  data_pagamento: string | null
+  imponibile_cents: number
+  cassa_percentuale: number
+  cassa_cents: number
+  iva_percentuale: number
+  iva_cents: number
+  ritenuta_percentuale: number
+  ritenuta_cents: number
+  totale_cents: number
+  netto_cents: number
+  stato: string | null
+  fattura_id: string | null
+  note: string | null
+  created_at: number
+  updated_at: number
+}
+
+// Campi accettati in input (gli importi calcolati vengono ricalcolati server-side).
+export interface MovimentoInput {
+  tipo: TipoMovimento
+  controparte?: string | null
+  descrizione?: string | null
+  numero?: string | null
+  data?: string | null
+  data_scadenza?: string | null
+  data_pagamento?: string | null
+  imponibile_cents?: number
+  cassa_percentuale?: number
+  iva_percentuale?: number
+  ritenuta_percentuale?: number
+  stato?: string | null
+  fattura_id?: string | null
+  note?: string | null
+}

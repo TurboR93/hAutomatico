@@ -1,0 +1,408 @@
+import { ReactNode, useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { X } from 'lucide-react'
+import { api } from '../api'
+import { isAuthError, messageOf } from '../useFetch'
+import { computeAmounts } from '../money'
+import { centsToInput, euroToCents, formatEuro, oggiISO } from '../format'
+import {
+  Movimento,
+  MovimentoInput,
+  STATI_PER_TIPO,
+  STATO_LABEL,
+  TIPI,
+  TIPO_LABEL,
+  TipoMovimento,
+} from '../types'
+
+interface RecordFormModalProps {
+  open: boolean
+  initial?: Movimento | null
+  defaultTipo?: TipoMovimento
+  lockTipo?: boolean
+  fatture?: Movimento[]
+  onClose: () => void
+  onSaved: (record: Movimento) => void
+}
+
+interface FormState {
+  tipo: TipoMovimento
+  controparte: string
+  descrizione: string
+  numero: string
+  data: string
+  data_scadenza: string
+  data_pagamento: string
+  imponibile: string
+  cassa_percentuale: string
+  iva_percentuale: string
+  ritenuta_percentuale: string
+  stato: string
+  fattura_id: string
+  note: string
+}
+
+const inputCls =
+  'w-full rounded-xl border border-black/15 bg-white px-3 py-2 text-sm focus:border-[#D03F29] focus:outline-none'
+
+function defaultForm(tipo: TipoMovimento): FormState {
+  return {
+    tipo,
+    controparte: '',
+    descrizione: '',
+    numero: '',
+    data: oggiISO(),
+    data_scadenza: '',
+    data_pagamento: '',
+    imponibile: '',
+    cassa_percentuale: '',
+    iva_percentuale: tipo === 'fattura_emessa' || tipo === 'fattura_ricevuta' || tipo === 'preventivo' ? '22' : '',
+    ritenuta_percentuale: tipo === 'ritenuta' ? '20' : '',
+    stato: STATI_PER_TIPO[tipo][0],
+    fattura_id: '',
+    note: '',
+  }
+}
+
+function formFromMovimento(m: Movimento): FormState {
+  return {
+    tipo: m.tipo,
+    controparte: m.controparte || '',
+    descrizione: m.descrizione || '',
+    numero: m.numero || '',
+    data: m.data || '',
+    data_scadenza: m.data_scadenza || '',
+    data_pagamento: m.data_pagamento || '',
+    imponibile: centsToInput(m.imponibile_cents),
+    cassa_percentuale: m.cassa_percentuale ? String(m.cassa_percentuale) : '',
+    iva_percentuale: m.iva_percentuale ? String(m.iva_percentuale) : '',
+    ritenuta_percentuale: m.ritenuta_percentuale ? String(m.ritenuta_percentuale) : '',
+    stato: m.stato || STATI_PER_TIPO[m.tipo][0],
+    fattura_id: m.fattura_id || '',
+    note: m.note || '',
+  }
+}
+
+const Field = ({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) => (
+  <label className="block">
+    <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-black/50">{label}</span>
+    {children}
+    {hint && <span className="mt-1 block text-xs text-black/40">{hint}</span>}
+  </label>
+)
+
+const RecordFormModal = ({
+  open,
+  initial,
+  defaultTipo = 'fattura_emessa',
+  lockTipo = false,
+  fatture = [],
+  onClose,
+  onSaved,
+}: RecordFormModalProps) => {
+  const [form, setForm] = useState<FormState>(defaultForm(defaultTipo))
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    setError(null)
+    setForm(initial ? formFromMovimento(initial) : defaultForm(defaultTipo))
+  }, [open, initial, defaultTipo])
+
+  const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }))
+
+  const changeTipo = (tipo: TipoMovimento) =>
+    set({ tipo, stato: STATI_PER_TIPO[tipo][0] })
+
+  const isPagamento = form.tipo === 'pagamento'
+  const showFiscal = !isPagamento
+  const showScadenza = form.tipo === 'fattura_emessa' || form.tipo === 'fattura_ricevuta'
+  const showFatturaLink = form.tipo === 'ritenuta'
+  const importoLabel = isPagamento ? 'Importo' : 'Imponibile (compenso)'
+  const controparteLabel = form.tipo === 'fattura_ricevuta' ? 'Fornitore' : 'Cliente'
+  const dataLabel = form.tipo === 'preventivo' ? 'Data firma' : 'Data documento'
+
+  const preview = computeAmounts({
+    imponibile_cents: euroToCents(form.imponibile),
+    cassa_percentuale: showFiscal ? Number(form.cassa_percentuale) : 0,
+    iva_percentuale: showFiscal ? Number(form.iva_percentuale) : 0,
+    ritenuta_percentuale: showFiscal ? Number(form.ritenuta_percentuale) : 0,
+  })
+  const imponibileCents = euroToCents(form.imponibile)
+
+  const submit = async () => {
+    setSaving(true)
+    setError(null)
+    const input: MovimentoInput = {
+      tipo: form.tipo,
+      controparte: form.controparte,
+      descrizione: form.descrizione,
+      numero: form.numero,
+      data: form.data,
+      data_scadenza: showScadenza ? form.data_scadenza : null,
+      data_pagamento: form.data_pagamento,
+      imponibile_cents: imponibileCents,
+      cassa_percentuale: showFiscal ? Number(form.cassa_percentuale) || 0 : 0,
+      iva_percentuale: showFiscal ? Number(form.iva_percentuale) || 0 : 0,
+      ritenuta_percentuale: showFiscal ? Number(form.ritenuta_percentuale) || 0 : 0,
+      stato: form.stato,
+      fattura_id: showFatturaLink ? form.fattura_id || null : null,
+      note: form.note,
+    }
+    try {
+      const record = initial
+        ? await api.updateRecord(initial.id, input)
+        : await api.createRecord(input)
+      onSaved(record)
+    } catch (e) {
+      if (isAuthError(e)) window.location.assign('/login')
+      else setError(messageOf(e))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="my-8 w-full max-w-2xl rounded-2xl bg-white shadow-xl"
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.96, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-black/10 px-6 py-4">
+              <h2 className="text-lg font-black">
+                {initial ? 'Modifica' : 'Nuovo'} — {TIPO_LABEL[form.tipo]}
+              </h2>
+              <button onClick={onClose} className="text-black/50 hover:text-black" aria-label="Chiudi">
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="space-y-4 px-6 py-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {!lockTipo && (
+                  <Field label="Tipo">
+                    <select
+                      value={form.tipo}
+                      onChange={(e) => changeTipo(e.target.value as TipoMovimento)}
+                      className={inputCls}
+                    >
+                      {TIPI.map((t) => (
+                        <option key={t} value={t}>
+                          {TIPO_LABEL[t]}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+
+                <Field label={controparteLabel}>
+                  <input
+                    type="text"
+                    value={form.controparte}
+                    onChange={(e) => set({ controparte: e.target.value })}
+                    className={inputCls}
+                    placeholder="Nome cliente o fornitore"
+                  />
+                </Field>
+
+                <Field label="Stato">
+                  <select value={form.stato} onChange={(e) => set({ stato: e.target.value })} className={inputCls}>
+                    {STATI_PER_TIPO[form.tipo].map((s) => (
+                      <option key={s} value={s}>
+                        {STATO_LABEL[s] || s}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="Numero documento">
+                  <input
+                    type="text"
+                    value={form.numero}
+                    onChange={(e) => set({ numero: e.target.value })}
+                    className={inputCls}
+                    placeholder="es. 2026/001"
+                  />
+                </Field>
+
+                <Field label={dataLabel}>
+                  <input type="date" value={form.data} onChange={(e) => set({ data: e.target.value })} className={inputCls} />
+                </Field>
+
+                {showScadenza && (
+                  <Field label="Scadenza">
+                    <input
+                      type="date"
+                      value={form.data_scadenza}
+                      onChange={(e) => set({ data_scadenza: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+                )}
+
+                <Field label="Data incasso / pagamento" hint="Quando il denaro entra o esce davvero">
+                  <input
+                    type="date"
+                    value={form.data_pagamento}
+                    onChange={(e) => set({ data_pagamento: e.target.value })}
+                    className={inputCls}
+                  />
+                </Field>
+
+                {showFatturaLink && (
+                  <Field label="Fattura collegata">
+                    <select
+                      value={form.fattura_id}
+                      onChange={(e) => set({ fattura_id: e.target.value })}
+                      className={inputCls}
+                    >
+                      <option value="">— nessuna —</option>
+                      {fatture.map((f) => (
+                        <option key={f.id} value={f.id}>
+                          {(f.numero || 's.n.') + ' · ' + (f.controparte || '—')}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+              </div>
+
+              <Field label="Descrizione">
+                <input
+                  type="text"
+                  value={form.descrizione}
+                  onChange={(e) => set({ descrizione: e.target.value })}
+                  className={inputCls}
+                  placeholder="Descrizione della prestazione"
+                />
+              </Field>
+
+              {/* Importi */}
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Field label={importoLabel}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={form.imponibile}
+                    onChange={(e) => set({ imponibile: e.target.value })}
+                    className={inputCls}
+                    placeholder="0,00"
+                  />
+                </Field>
+                {showFiscal && (
+                  <>
+                    <Field label="Cassa %" hint="Contributo prev.">
+                      <input
+                        type="number"
+                        step="any"
+                        min="0"
+                        value={form.cassa_percentuale}
+                        onChange={(e) => set({ cassa_percentuale: e.target.value })}
+                        className={inputCls}
+                        placeholder="0"
+                      />
+                    </Field>
+                    <Field label="IVA %">
+                      <input
+                        type="number"
+                        step="any"
+                        min="0"
+                        value={form.iva_percentuale}
+                        onChange={(e) => set({ iva_percentuale: e.target.value })}
+                        className={inputCls}
+                        placeholder="22"
+                      />
+                    </Field>
+                    <Field label="Ritenuta %">
+                      <input
+                        type="number"
+                        step="any"
+                        min="0"
+                        value={form.ritenuta_percentuale}
+                        onChange={(e) => set({ ritenuta_percentuale: e.target.value })}
+                        className={inputCls}
+                        placeholder="0"
+                      />
+                    </Field>
+                  </>
+                )}
+              </div>
+
+              {/* Anteprima calcolo */}
+              {showFiscal && (
+                <div className="rounded-xl bg-neutral-50 p-4 text-sm">
+                  <div className="grid grid-cols-2 gap-y-1 sm:grid-cols-3">
+                    <span className="text-black/50">Imponibile</span>
+                    <span className="text-right font-medium sm:col-span-2">{formatEuro(imponibileCents)}</span>
+                    {preview.cassa_cents > 0 && (
+                      <>
+                        <span className="text-black/50">Cassa</span>
+                        <span className="text-right font-medium sm:col-span-2">{formatEuro(preview.cassa_cents)}</span>
+                      </>
+                    )}
+                    <span className="text-black/50">IVA</span>
+                    <span className="text-right font-medium sm:col-span-2">{formatEuro(preview.iva_cents)}</span>
+                    {preview.ritenuta_cents > 0 && (
+                      <>
+                        <span className="text-[#D03F29]">Ritenuta d'acconto</span>
+                        <span className="text-right font-medium text-[#D03F29] sm:col-span-2">
+                          − {formatEuro(preview.ritenuta_cents)}
+                        </span>
+                      </>
+                    )}
+                    <span className="mt-1 border-t border-black/10 pt-1 font-bold">Totale documento</span>
+                    <span className="mt-1 border-t border-black/10 pt-1 text-right font-bold sm:col-span-2">
+                      {formatEuro(preview.totale_cents)}
+                    </span>
+                    <span className="font-black text-emerald-700">Netto a pagare</span>
+                    <span className="text-right font-black text-emerald-700 sm:col-span-2">
+                      {formatEuro(preview.netto_cents)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <Field label="Note">
+                <textarea
+                  value={form.note}
+                  onChange={(e) => set({ note: e.target.value })}
+                  className={`${inputCls} min-h-[64px] resize-y`}
+                  placeholder="Note interne (opzionale)"
+                />
+              </Field>
+
+              {error && <div className="rounded-xl bg-red-50 px-4 py-2 text-sm font-medium text-[#D03F29]">{error}</div>}
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-black/10 px-6 py-4">
+              <button onClick={onClose} className="rounded-full px-5 py-2 text-sm font-bold text-black hover:bg-black/5">
+                Annulla
+              </button>
+              <button
+                onClick={submit}
+                disabled={saving}
+                className="rounded-full bg-[#D03F29] px-6 py-2 text-sm font-bold text-white transition-colors hover:bg-[#b5331f] disabled:opacity-60"
+              >
+                {saving ? 'Salvataggio…' : 'Salva'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+export default RecordFormModal

@@ -1,0 +1,12 @@
+# Cloudflare Pages — configurazione Functions + binding D1.
+# Il sito statico resta gestito da Pages; questo file serve a Functions e al dev locale.
+name = "hautomatico"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-09-23"
+
+# Database D1 (SQLite). Crea il DB con:  wrangler d1 create hautomatico-db
+# poi incolla qui il database_id restituito.
+[[d1_databases]]
+binding = "DB"
+database_name = "hautomatico-db"
+database_id = "REPLACE_WITH_DATABASE_ID"
