@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Download, FileText, Paperclip, Trash2, Upload, X } from 'lucide-react'
 import { api } from '../api'
 import { isAuthError, messageOf } from '../useFetch'
-import { computeAmounts } from '../money'
+import { computeAmounts, grossUpToImponibile } from '../money'
 import { centsToInput, euroToCents, formatEuro, formatFileSize, oggiISO } from '../format'
 import {
   Allegato,
@@ -114,12 +114,14 @@ const RecordFormModal = ({
   const [error, setError] = useState<string | null>(null)
   const [allegati, setAllegati] = useState<Allegato[]>([])
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [importoNetto, setImportoNetto] = useState(false)
 
   useEffect(() => {
     if (!open) return
     setError(null)
     setPendingFiles([])
     setAllegati([])
+    setImportoNetto(false)
     setForm(initial ? formFromMovimento(initial) : defaultForm(defaultTipo))
     if (initial) {
       api
@@ -159,13 +161,20 @@ const RecordFormModal = ({
   const controparteLabel = form.tipo === 'fattura_ricevuta' ? 'Fornitore' : 'Cliente'
   const dataLabel = form.tipo === 'preventivo' ? 'Data firma' : 'Data documento'
 
+  const cassaP = showFiscal ? Number(form.cassa_percentuale) || 0 : 0
+  const ivaP = showFiscal ? Number(form.iva_percentuale) || 0 : 0
+  const ritP = showFiscal ? Number(form.ritenuta_percentuale) || 0 : 0
+  const importoCents = euroToCents(form.imponibile)
+  // Se l'importo inserito è il netto, ricava il compenso lordo (imponibile).
+  const imponibileCents = importoNetto
+    ? grossUpToImponibile(importoCents, cassaP, ivaP, ritP)
+    : importoCents
   const preview = computeAmounts({
-    imponibile_cents: euroToCents(form.imponibile),
-    cassa_percentuale: showFiscal ? Number(form.cassa_percentuale) : 0,
-    iva_percentuale: showFiscal ? Number(form.iva_percentuale) : 0,
-    ritenuta_percentuale: showFiscal ? Number(form.ritenuta_percentuale) : 0,
+    imponibile_cents: imponibileCents,
+    cassa_percentuale: cassaP,
+    iva_percentuale: ivaP,
+    ritenuta_percentuale: ritP,
   })
-  const imponibileCents = euroToCents(form.imponibile)
 
   const submit = async () => {
     setSaving(true)
@@ -179,9 +188,9 @@ const RecordFormModal = ({
       data_scadenza: showScadenza ? form.data_scadenza : null,
       data_pagamento: form.data_pagamento,
       imponibile_cents: imponibileCents,
-      cassa_percentuale: showFiscal ? Number(form.cassa_percentuale) || 0 : 0,
-      iva_percentuale: showFiscal ? Number(form.iva_percentuale) || 0 : 0,
-      ritenuta_percentuale: showFiscal ? Number(form.ritenuta_percentuale) || 0 : 0,
+      cassa_percentuale: cassaP,
+      iva_percentuale: ivaP,
+      ritenuta_percentuale: ritP,
       stato: form.stato,
       fattura_id: showFatturaLink ? form.fattura_id || null : null,
       note: form.note,
@@ -409,11 +418,25 @@ const RecordFormModal = ({
                 )}
               </div>
 
+              {showFiscal && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={importoNetto}
+                    onChange={(e) => setImportoNetto(e.target.checked)}
+                    className="h-4 w-4 accent-[#D03F29]"
+                  />
+                  <span>
+                    L'importo inserito è il <b>netto</b> che incasso (la ritenuta si aggiunge sopra)
+                  </span>
+                </label>
+              )}
+
               {/* Anteprima calcolo */}
               {showFiscal && (
                 <div className="rounded-xl bg-neutral-50 p-4 text-sm">
                   <div className="grid grid-cols-2 gap-y-1 sm:grid-cols-3">
-                    <span className="text-black/50">Imponibile</span>
+                    <span className="text-black/50">Imponibile (lordo)</span>
                     <span className="text-right font-medium sm:col-span-2">{formatEuro(imponibileCents)}</span>
                     {preview.cassa_cents > 0 && (
                       <>

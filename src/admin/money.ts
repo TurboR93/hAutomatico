@@ -29,6 +29,23 @@ function toPerc(value: number | null | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
+// Dato il NETTO che si vuole incassare, ricava l'imponibile (compenso lordo) tale che
+// imponibile + cassa + IVA - ritenuta = netto. Caso tipico occasionale (cassa/IVA 0):
+// imponibile = netto / (1 - ritenuta%).
+export function grossUpToImponibile(
+  nettoCents: number,
+  cassaPerc = 0,
+  ivaPerc = 0,
+  ritenutaPerc = 0,
+): number {
+  const c = toPerc(cassaPerc) / 100
+  const v = toPerc(ivaPerc) / 100
+  const r = toPerc(ritenutaPerc) / 100
+  const factor = 1 + c + (1 + c) * v - r
+  if (!(factor > 0)) return toInt(nettoCents)
+  return Math.round(toInt(nettoCents) / factor)
+}
+
 export function computeAmounts(input: AmountInput): ComputedAmounts {
   const imponibile = toInt(input.imponibile_cents)
   const cassaPerc = toPerc(input.cassa_percentuale)
