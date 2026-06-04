@@ -12,7 +12,8 @@
     "hash-password": "node scripts/hash-password.mjs",
     "db:local": "wrangler d1 execute hautomatico-db --local --file=./schema.sql",
     "db:remote": "wrangler d1 execute hautomatico-db --remote --file=./schema.sql",
-    "pages:dev": "wrangler pages dev --proxy 5173 --d1=DB=hautomatico-db --compatibility-date=2024-09-23"
+    "pages:dev": "wrangler pages dev --proxy 5173 --d1=DB=hautomatico-db --compatibility-date=2024-09-23",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=hautomatico"
   },
   "dependencies": {
     "framer-motion": "^11.0.0",
