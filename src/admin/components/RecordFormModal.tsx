@@ -9,6 +9,8 @@ import {
   Allegato,
   Movimento,
   MovimentoInput,
+  RICORRENZA_LABEL,
+  RICORRENZE,
   STATI_PER_TIPO,
   STATO_LABEL,
   TIPI,
@@ -41,6 +43,8 @@ interface FormState {
   stato: string
   fattura_id: string
   note: string
+  ricorrenza: string
+  prossimo_rinnovo: string
 }
 
 const inputCls =
@@ -62,6 +66,8 @@ function defaultForm(tipo: TipoMovimento): FormState {
     stato: STATI_PER_TIPO[tipo][0],
     fattura_id: '',
     note: '',
+    ricorrenza: 'una_tantum',
+    prossimo_rinnovo: '',
   }
 }
 
@@ -81,6 +87,8 @@ function formFromMovimento(m: Movimento): FormState {
     stato: m.stato || STATI_PER_TIPO[m.tipo][0],
     fattura_id: m.fattura_id || '',
     note: m.note || '',
+    ricorrenza: m.ricorrenza || 'una_tantum',
+    prossimo_rinnovo: m.prossimo_rinnovo || '',
   }
 }
 
@@ -177,6 +185,8 @@ const RecordFormModal = ({
       stato: form.stato,
       fattura_id: showFatturaLink ? form.fattura_id || null : null,
       note: form.note,
+      ricorrenza: form.ricorrenza,
+      prossimo_rinnovo: form.ricorrenza !== 'una_tantum' ? form.prossimo_rinnovo || null : null,
     }
     try {
       const record = initial
@@ -292,6 +302,33 @@ const RecordFormModal = ({
                     className={inputCls}
                   />
                 </Field>
+
+                {showFiscal && (
+                  <Field label="Ricorrenza">
+                    <select
+                      value={form.ricorrenza}
+                      onChange={(e) => set({ ricorrenza: e.target.value })}
+                      className={inputCls}
+                    >
+                      {RICORRENZE.map((r) => (
+                        <option key={r} value={r}>
+                          {RICORRENZA_LABEL[r]}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+
+                {showFiscal && form.ricorrenza !== 'una_tantum' && (
+                  <Field label="Prossimo rinnovo" hint="Quando va rinnovata/rifatturata">
+                    <input
+                      type="date"
+                      value={form.prossimo_rinnovo}
+                      onChange={(e) => set({ prossimo_rinnovo: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+                )}
 
                 {showFatturaLink && (
                   <Field label="Fattura collegata">

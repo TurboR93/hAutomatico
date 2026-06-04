@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Paperclip, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Paperclip, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
 import { api, RecordFilters } from '../api'
 import { isAuthError, messageOf, useFetch } from '../useFetch'
 import { formatData, formatEuro } from '../format'
-import { Movimento, STATI_PER_TIPO, TIPO_LABEL, TipoMovimento } from '../types'
+import { Movimento, RICORRENZA_LABEL, STATI_PER_TIPO, TIPO_LABEL, TipoMovimento } from '../types'
 import DataTable, { Column } from './DataTable'
 import StatoBadge from './StatoBadge'
 import RecordFormModal from './RecordFormModal'
@@ -123,6 +123,13 @@ const RecordsManager = ({
             )}
           </div>
           {m.descrizione && <div className="text-xs text-black/50">{m.descrizione}</div>}
+          {m.ricorrenza && m.ricorrenza !== 'una_tantum' && (
+            <div className="mt-0.5 inline-flex items-center gap-1 text-xs text-sky-700">
+              <Repeat size={11} />
+              {RICORRENZA_LABEL[m.ricorrenza] || m.ricorrenza}
+              {m.prossimo_rinnovo ? ` · rinnovo ${formatData(m.prossimo_rinnovo)}` : ''}
+            </div>
+          )}
         </div>
       ),
     },

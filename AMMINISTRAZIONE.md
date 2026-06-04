@@ -76,6 +76,10 @@ imponibile (compenso)
 ```
 Regime forfettario: IVA % = 0 e ritenuta % = 0.
 
+**Ricorrenza**: ogni voce ha `ricorrenza` (`una_tantum`/`mensile`/`annuale`) e
+`prossimo_rinnovo` (data). La Panoramica calcola i ricavi/costi ricorrenti annui
+(mensile ×12, annuale ×1) e mostra l'elenco "Prossimi rinnovi" ordinato per scadenza.
+
 Gli **allegati** (PDF/scansioni) sono su R2; in D1 (tabella `allegati`) restano solo
 i metadati. Limite 10 MB per file. Eliminando un movimento si eliminano anche i suoi
 allegati. Gli allegati NON sono inclusi nell'export CSV/JSON (che riguarda i dati).

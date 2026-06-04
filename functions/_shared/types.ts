@@ -33,6 +33,9 @@ export const TIPI: TipoMovimento[] = [
   'preventivo',
 ]
 
+export type Ricorrenza = 'una_tantum' | 'mensile' | 'annuale'
+export const RICORRENZE: Ricorrenza[] = ['una_tantum', 'mensile', 'annuale']
+
 // Stati ammessi per ciascun tipo (macchina a stati, validata lato server).
 export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
   pagamento: ['incassato'],
@@ -63,6 +66,8 @@ export interface Movimento {
   stato: string | null
   fattura_id: string | null
   note: string | null
+  ricorrenza: string
+  prossimo_rinnovo: string | null
   created_at: number
   updated_at: number
   allegati_count?: number
@@ -84,4 +89,6 @@ export interface MovimentoInput {
   stato?: string | null
   fattura_id?: string | null
   note?: string | null
+  ricorrenza?: string | null
+  prossimo_rinnovo?: string | null
 }

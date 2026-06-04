@@ -5,6 +5,8 @@ import {
   Allegato,
   Movimento,
   MovimentoInput,
+  Ricorrenza,
+  RICORRENZE,
   STATI_PER_TIPO,
   TIPI,
   TipoMovimento,
@@ -89,6 +91,12 @@ export function validateInput(
   if (b.fattura_id !== undefined) input.fattura_id = str(b.fattura_id)
   if (b.note !== undefined) input.note = str(b.note)
   if (stato !== undefined) input.stato = stato
+  if (b.ricorrenza !== undefined) {
+    const r = str(b.ricorrenza)
+    if (r && !RICORRENZE.includes(r as Ricorrenza)) return { error: 'Ricorrenza non valida' }
+    input.ricorrenza = r || 'una_tantum'
+  }
+  if (b.prossimo_rinnovo !== undefined) input.prossimo_rinnovo = str(b.prossimo_rinnovo)
 
   return { input }
 }
@@ -97,7 +105,8 @@ const COLUMNS = [
   'id', 'tipo', 'controparte', 'descrizione', 'numero', 'data', 'data_scadenza',
   'data_pagamento', 'imponibile_cents', 'cassa_percentuale', 'cassa_cents',
   'iva_percentuale', 'iva_cents', 'ritenuta_percentuale', 'ritenuta_cents',
-  'totale_cents', 'netto_cents', 'stato', 'fattura_id', 'note', 'created_at', 'updated_at',
+  'totale_cents', 'netto_cents', 'stato', 'fattura_id', 'note',
+  'ricorrenza', 'prossimo_rinnovo', 'created_at', 'updated_at',
 ]
 
 function rowValues(m: Movimento): unknown[] {
@@ -116,6 +125,7 @@ export function buildMovimento(input: MovimentoInput, existing?: Movimento): Mov
     iva_percentuale: 0, iva_cents: 0, ritenuta_percentuale: 0, ritenuta_cents: 0,
     totale_cents: 0, netto_cents: 0,
     stato: STATO_DEFAULT[input.tipo], fattura_id: null, note: null,
+    ricorrenza: 'una_tantum', prossimo_rinnovo: null,
     created_at: now, updated_at: now,
   }
 
@@ -136,6 +146,8 @@ export function buildMovimento(input: MovimentoInput, existing?: Movimento): Mov
     stato: (has('stato') ? input.stato : base.stato) || STATO_DEFAULT[tipo],
     fattura_id: has('fattura_id') ? input.fattura_id ?? null : base.fattura_id,
     note: has('note') ? input.note ?? null : base.note,
+    ricorrenza: (has('ricorrenza') ? input.ricorrenza : base.ricorrenza) || 'una_tantum',
+    prossimo_rinnovo: has('prossimo_rinnovo') ? input.prossimo_rinnovo ?? null : base.prossimo_rinnovo,
     updated_at: now,
   }
 

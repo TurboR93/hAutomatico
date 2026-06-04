@@ -1,8 +1,10 @@
 import {
+  CalendarClock,
   Clock,
   Download,
   FileSignature,
   Receipt,
+  Repeat,
   TrendingDown,
   TrendingUp,
   Wallet,
@@ -10,7 +12,7 @@ import {
 import { api } from '../api'
 import { useFetch } from '../useFetch'
 import { formatData, formatEuro } from '../format'
-import { Movimento, STATO_LABEL, Summary, TIPO_LABEL } from '../types'
+import { Movimento, RICORRENZA_LABEL, STATO_LABEL, Summary, TIPO_LABEL } from '../types'
 import KpiCard from '../components/KpiCard'
 import MonthlyChart from '../components/MonthlyChart'
 import DataTable, { Column } from '../components/DataTable'
@@ -68,11 +70,36 @@ const PanoramicaPage = () => {
         <KpiCard label="Spese pagate" value={formatEuro(kpi.spesePagate)} sub={`Da pagare: ${formatEuro(kpi.speseDaPagare)}`} icon={TrendingDown} accent="red" delay={0.15} />
         <KpiCard label="Ritenute d'acconto" value={formatEuro(kpi.ritenuteSubite)} sub="Credito / acconto IRPEF subìto" icon={Receipt} accent="plain" delay={0.2} />
         <KpiCard label="Preventivi in corso" value={formatEuro(kpi.pipelinePreventivi)} sub={`${conteggi.preventiviAperti} preventivi aperti`} icon={FileSignature} accent="dark" delay={0.25} />
+        <KpiCard label="Ricavi ricorrenti / anno" value={formatEuro(kpi.entrateRicorrentiAnnue)} sub="Canoni e rinnovi attivi" icon={Repeat} accent="green" delay={0.3} />
+        <KpiCard label="Costi ricorrenti / anno" value={formatEuro(kpi.usciteRicorrentiAnnue)} sub="Abbonamenti e servizi" icon={Repeat} accent="plain" delay={0.35} />
       </div>
 
       <div className="mt-6">
         <MonthlyChart data={summary.serieMensile} />
       </div>
+
+      {summary.prossimiRinnovi.length > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-3 font-black">Prossimi rinnovi</h2>
+          <div className="divide-y divide-black/5 rounded-2xl border border-black/10 bg-white shadow-sm">
+            {summary.prossimiRinnovi.map((r) => (
+              <div key={r.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+                <CalendarClock size={16} className="shrink-0 text-sky-600" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-medium">{r.controparte || '—'}</div>
+                  <div className="truncate text-xs text-black/50">
+                    {[r.descrizione, RICORRENZA_LABEL[r.ricorrenza] || r.ricorrenza].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="font-medium">{formatData(r.prossimo_rinnovo)}</div>
+                  <div className="text-xs text-black/50">{formatEuro(r.imponibile_cents || r.totale_cents)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6">
         <h2 className="mb-3 font-black">Movimenti recenti</h2>

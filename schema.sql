@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS movimenti (
   fattura_id      TEXT REFERENCES movimenti(id), -- soft FK: ritenuta -> fattura collegata
   note            TEXT,
 
+  ricorrenza        TEXT NOT NULL DEFAULT 'una_tantum', -- 'una_tantum'|'mensile'|'annuale'
+  prossimo_rinnovo  TEXT,                               -- ISO 'YYYY-MM-DD', prossima scadenza/rinnovo
+
   created_at      INTEGER NOT NULL,              -- epoch ms
   updated_at      INTEGER NOT NULL
 );

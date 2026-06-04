@@ -49,6 +49,14 @@ export const STATO_LABEL: Record<string, string> = {
 // Stati che indicano "denaro effettivamente movimentato".
 export const STATI_CONCLUSI = new Set(['incassato', 'pagata', 'versata'])
 
+export type Ricorrenza = 'una_tantum' | 'mensile' | 'annuale'
+export const RICORRENZE: Ricorrenza[] = ['una_tantum', 'mensile', 'annuale']
+export const RICORRENZA_LABEL: Record<string, string> = {
+  una_tantum: 'Una tantum',
+  mensile: 'Mensile',
+  annuale: 'Annuale',
+}
+
 export interface Movimento {
   id: string
   tipo: TipoMovimento
@@ -70,6 +78,8 @@ export interface Movimento {
   stato: string | null
   fattura_id: string | null
   note: string | null
+  ricorrenza: string
+  prossimo_rinnovo: string | null
   created_at: number
   updated_at: number
   allegati_count?: number
@@ -90,6 +100,8 @@ export interface MovimentoInput {
   stato?: string | null
   fattura_id?: string | null
   note?: string | null
+  ricorrenza?: string | null
+  prossimo_rinnovo?: string | null
 }
 
 export interface Allegato {
@@ -111,6 +123,19 @@ export interface Kpi {
   saldo: number
   ritenuteSubite: number
   pipelinePreventivi: number
+  entrateRicorrentiAnnue: number
+  usciteRicorrentiAnnue: number
+}
+
+export interface ProssimoRinnovo {
+  id: string
+  tipo: TipoMovimento
+  controparte: string | null
+  descrizione: string | null
+  ricorrenza: string
+  prossimo_rinnovo: string | null
+  imponibile_cents: number
+  totale_cents: number
 }
 
 export interface Conteggi {
@@ -131,6 +156,7 @@ export interface Summary {
   kpi: Kpi
   conteggi: Conteggi
   serieMensile: PuntoMensile[]
+  prossimiRinnovi: ProssimoRinnovo[]
 }
 
 export function isEntrata(tipo: TipoMovimento): boolean {

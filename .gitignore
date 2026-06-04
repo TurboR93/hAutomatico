@@ -36,6 +36,9 @@ dist-ssr
 *.sqlite
 *.sqlite3
 
+# Documenti fiscali privati (mai nel repo)
+FISCALhautomatico/
+
 
 
 
