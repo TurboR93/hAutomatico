@@ -49,3 +49,11 @@ export function formatMese(ym: string): string {
 export function oggiISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
+
+// Byte -> '1,2 MB' / '345 KB'
+export function formatFileSize(bytes: number): string {
+  if (!bytes) return '0 B'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
+}

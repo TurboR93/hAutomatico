@@ -72,6 +72,7 @@ export interface Movimento {
   note: string | null
   created_at: number
   updated_at: number
+  allegati_count?: number
 }
 
 export interface MovimentoInput {
@@ -89,6 +90,15 @@ export interface MovimentoInput {
   stato?: string | null
   fattura_id?: string | null
   note?: string | null
+}
+
+export interface Allegato {
+  id: string
+  movimento_id: string
+  filename: string
+  content_type: string | null
+  size: number
+  created_at: number
 }
 
 export interface Kpi {

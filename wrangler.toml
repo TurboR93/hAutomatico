@@ -10,3 +10,9 @@ compatibility_date = "2024-09-23"
 binding = "DB"
 database_name = "hautomatico-db"
 database_id = "b5298e09-a3d4-4e8a-94d5-730f6ed71835"
+
+# Storage allegati (PDF/scansioni). Crea il bucket con:
+#   wrangler r2 bucket create hautomatico-docs
+[[r2_buckets]]
+binding = "DOCS"
+bucket_name = "hautomatico-docs"

@@ -51,3 +51,15 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   first_fail   INTEGER,        -- epoch ms del primo tentativo della finestra
   locked_until INTEGER         -- epoch ms fino a cui l'IP e' bloccato
 );
+
+-- Allegati (documenti) collegati a un movimento. I file stanno su R2; qui i metadati.
+CREATE TABLE IF NOT EXISTS allegati (
+  id            TEXT PRIMARY KEY,
+  movimento_id  TEXT NOT NULL,
+  filename      TEXT NOT NULL,
+  content_type  TEXT,
+  size          INTEGER NOT NULL DEFAULT 0,   -- byte
+  r2_key        TEXT NOT NULL,                -- chiave oggetto su R2
+  created_at    INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_allegati_movimento ON allegati(movimento_id);

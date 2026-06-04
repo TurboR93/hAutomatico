@@ -3,8 +3,19 @@
 
 export interface Env {
   DB: D1Database
+  DOCS: R2Bucket
   ADMIN_PASSWORD_HASH: string
   AUTH_SECRET: string
+}
+
+export interface Allegato {
+  id: string
+  movimento_id: string
+  filename: string
+  content_type: string | null
+  size: number
+  r2_key: string
+  created_at: number
 }
 
 export type TipoMovimento =
@@ -54,6 +65,7 @@ export interface Movimento {
   note: string | null
   created_at: number
   updated_at: number
+  allegati_count?: number
 }
 
 // Campi accettati in input (gli importi calcolati vengono ricalcolati server-side).

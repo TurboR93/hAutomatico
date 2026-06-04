@@ -1,7 +1,7 @@
 // Client tipizzato per le API /api/* dell'area amministrazione.
 // Tutte le richieste includono il cookie di sessione (credentials: 'include').
 
-import { Movimento, MovimentoInput, Summary } from './types'
+import { Allegato, Movimento, MovimentoInput, Summary } from './types'
 
 export class ApiError extends Error {
   status: number
@@ -109,5 +109,37 @@ export const api = {
 
   exportUrl(format: 'json' | 'csv'): string {
     return `/api/export?format=${format}`
+  },
+
+  // ---------- allegati ----------
+
+  async listAllegati(movimentoId: string): Promise<Allegato[]> {
+    const r = await request<{ allegati: Allegato[] }>(`/records/${movimentoId}/allegati`)
+    return r.allegati
+  },
+
+  async uploadAllegato(movimentoId: string, file: File): Promise<Allegato> {
+    const fd = new FormData()
+    fd.append('file', file)
+    // FormData: niente header Content-Type (lo imposta il browser col boundary).
+    const res = await fetch(`/api/records/${movimentoId}/allegati`, {
+      method: 'POST',
+      credentials: 'include',
+      body: fd,
+    })
+    const text = await res.text()
+    const data = text ? JSON.parse(text) : null
+    if (!res.ok) {
+      throw new ApiError(res.status, (data as { error?: string } | null)?.error || `Errore ${res.status}`)
+    }
+    return (data as { allegato: Allegato }).allegato
+  },
+
+  async deleteAllegato(allegatoId: string): Promise<void> {
+    await request(`/allegati/${allegatoId}`, { method: 'DELETE' })
+  },
+
+  allegatoUrl(allegatoId: string, download = false): string {
+    return `/api/allegati/${allegatoId}${download ? '?dl=1' : ''}`
   },
 }

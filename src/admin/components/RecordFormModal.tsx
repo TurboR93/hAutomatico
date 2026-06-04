@@ -1,11 +1,12 @@
 import { ReactNode, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X } from 'lucide-react'
+import { Download, FileText, Paperclip, Trash2, Upload, X } from 'lucide-react'
 import { api } from '../api'
 import { isAuthError, messageOf } from '../useFetch'
 import { computeAmounts } from '../money'
-import { centsToInput, euroToCents, formatEuro, oggiISO } from '../format'
+import { centsToInput, euroToCents, formatEuro, formatFileSize, oggiISO } from '../format'
 import {
+  Allegato,
   Movimento,
   MovimentoInput,
   STATI_PER_TIPO,
@@ -103,12 +104,39 @@ const RecordFormModal = ({
   const [form, setForm] = useState<FormState>(defaultForm(defaultTipo))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [allegati, setAllegati] = useState<Allegato[]>([])
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
 
   useEffect(() => {
     if (!open) return
     setError(null)
+    setPendingFiles([])
+    setAllegati([])
     setForm(initial ? formFromMovimento(initial) : defaultForm(defaultTipo))
+    if (initial) {
+      api
+        .listAllegati(initial.id)
+        .then(setAllegati)
+        .catch(() => setAllegati([]))
+    }
   }, [open, initial, defaultTipo])
+
+  const addFiles = (files: FileList | null) => {
+    if (!files) return
+    setPendingFiles((prev) => [...prev, ...Array.from(files)])
+  }
+  const removePending = (idx: number) =>
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx))
+
+  const deleteAllegato = async (a: Allegato) => {
+    try {
+      await api.deleteAllegato(a.id)
+      setAllegati((prev) => prev.filter((x) => x.id !== a.id))
+    } catch (e) {
+      if (isAuthError(e)) window.location.assign('/login')
+      else setError(messageOf(e))
+    }
+  }
 
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }))
 
@@ -154,6 +182,10 @@ const RecordFormModal = ({
       const record = initial
         ? await api.updateRecord(initial.id, input)
         : await api.createRecord(input)
+      // Carica gli eventuali file selezionati sul movimento (appena) salvato.
+      for (const file of pendingFiles) {
+        await api.uploadAllegato(record.id, file)
+      }
       onSaved(record)
     } catch (e) {
       if (isAuthError(e)) window.location.assign('/login')
@@ -382,6 +414,82 @@ const RecordFormModal = ({
                   placeholder="Note interne (opzionale)"
                 />
               </Field>
+
+              {/* Allegati */}
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-black/50">
+                  <Paperclip size={14} /> Allegati
+                </div>
+                <div className="space-y-2">
+                  {allegati.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center gap-2 rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm"
+                    >
+                      <FileText size={16} className="shrink-0 text-black/40" />
+                      <span className="min-w-0 flex-1 truncate">{a.filename}</span>
+                      <span className="shrink-0 text-xs text-black/40">{formatFileSize(a.size)}</span>
+                      <a
+                        href={api.allegatoUrl(a.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="shrink-0 rounded-lg p-1 text-black/50 hover:bg-black/5 hover:text-black"
+                        title="Apri / scarica"
+                      >
+                        <Download size={16} />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => deleteAllegato(a)}
+                        className="shrink-0 rounded-lg p-1 text-black/50 hover:bg-red-50 hover:text-[#D03F29]"
+                        title="Elimina"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {pendingFiles.map((f, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 rounded-xl border border-dashed border-[#D03F29]/40 bg-[#FDF07A]/20 px-3 py-2 text-sm"
+                    >
+                      <Upload size={16} className="shrink-0 text-[#D03F29]" />
+                      <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                      <span className="shrink-0 text-xs text-black/40">{formatFileSize(f.size)} · da caricare</span>
+                      <button
+                        type="button"
+                        onClick={() => removePending(i)}
+                        className="shrink-0 rounded-lg p-1 text-black/50 hover:bg-black/5"
+                        title="Rimuovi"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {allegati.length === 0 && pendingFiles.length === 0 && (
+                    <p className="text-xs text-black/40">Nessun documento allegato.</p>
+                  )}
+                </div>
+
+                <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-full border border-black/15 bg-white px-4 py-2 text-sm font-bold hover:bg-black/5">
+                  <Paperclip size={16} />
+                  Aggiungi file
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      addFiles(e.target.files)
+                      e.target.value = ''
+                    }}
+                  />
+                </label>
+                <p className="mt-1 text-xs text-black/40">
+                  PDF o immagini, fino a 10 MB per file. I file selezionati vengono caricati al salvataggio.
+                </p>
+              </div>
 
               {error && <div className="rounded-xl bg-red-50 px-4 py-2 text-sm font-medium text-[#D03F29]">{error}</div>}
             </div>

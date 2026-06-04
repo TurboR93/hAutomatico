@@ -1,5 +1,6 @@
 import {
   buildMovimento,
+  deleteAllegatiForMovimento,
   deleteMovimentoById,
   errorJson,
   getMovimentoById,
@@ -54,7 +55,9 @@ export const onRequestPatch: PagesFunction<Env> = async ({ request, env, params 
 }
 
 export const onRequestDelete: PagesFunction<Env> = async ({ env, params }) => {
-  const ok = await deleteMovimentoById(env.DB, idOf(params))
+  const id = idOf(params)
+  await deleteAllegatiForMovimento(env.DB, env.DOCS, id)
+  const ok = await deleteMovimentoById(env.DB, id)
   if (!ok) return errorJson('Movimento non trovato', 404)
   return json({ ok: true })
 }

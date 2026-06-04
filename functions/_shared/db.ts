@@ -2,6 +2,7 @@
 
 import { computeAmounts } from './money'
 import {
+  Allegato,
   Movimento,
   MovimentoInput,
   STATI_PER_TIPO,
@@ -178,7 +179,8 @@ export async function listMovimenti(db: D1Database, f: ListFilters): Promise<Mov
     const like = `%${f.q}%`
     binds.push(like, like, like)
   }
-  let sql = 'SELECT * FROM movimenti'
+  let sql =
+    'SELECT *, (SELECT COUNT(*) FROM allegati a WHERE a.movimento_id = movimenti.id) AS allegati_count FROM movimenti'
   if (where.length) sql += ' WHERE ' + where.join(' AND ')
   sql += ' ORDER BY COALESCE(data, "") DESC, created_at DESC'
   if (f.limit && f.limit > 0) { sql += ' LIMIT ?'; binds.push(f.limit) }
@@ -269,4 +271,48 @@ export async function clearLoginFailures(db: D1Database, ip: string): Promise<vo
   } catch {
     /* best-effort */
   }
+}
+
+// ---------- allegati (metadati su D1, file su R2) ----------
+
+export async function insertAllegato(db: D1Database, a: Allegato): Promise<void> {
+  await db
+    .prepare(
+      'INSERT INTO allegati (id, movimento_id, filename, content_type, size, r2_key, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(a.id, a.movimento_id, a.filename, a.content_type, a.size, a.r2_key, a.created_at)
+    .run()
+}
+
+export async function listAllegatiByMovimento(db: D1Database, movimentoId: string): Promise<Allegato[]> {
+  const res = await db
+    .prepare('SELECT * FROM allegati WHERE movimento_id = ? ORDER BY created_at ASC')
+    .bind(movimentoId)
+    .all<Allegato>()
+  return res.results ?? []
+}
+
+export async function getAllegatoById(db: D1Database, id: string): Promise<Allegato | null> {
+  return db.prepare('SELECT * FROM allegati WHERE id = ?').bind(id).first<Allegato>()
+}
+
+export async function deleteAllegatoRow(db: D1Database, id: string): Promise<void> {
+  await db.prepare('DELETE FROM allegati WHERE id = ?').bind(id).run()
+}
+
+// Elimina dal R2 e da D1 tutti gli allegati di un movimento (best-effort sul R2).
+export async function deleteAllegatiForMovimento(
+  db: D1Database,
+  bucket: R2Bucket,
+  movimentoId: string,
+): Promise<void> {
+  const allegati = await listAllegatiByMovimento(db, movimentoId)
+  for (const a of allegati) {
+    try {
+      await bucket.delete(a.r2_key)
+    } catch {
+      /* best-effort: prosegue comunque */
+    }
+  }
+  await db.prepare('DELETE FROM allegati WHERE movimento_id = ?').bind(movimentoId).run()
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Paperclip, Pencil, Plus, Trash2 } from 'lucide-react'
 import { api, RecordFilters } from '../api'
 import { isAuthError, messageOf, useFetch } from '../useFetch'
 import { formatData, formatEuro } from '../format'
@@ -113,7 +113,15 @@ const RecordsManager = ({
       header: 'Controparte',
       render: (m) => (
         <div>
-          <div className="font-medium">{m.controparte || '—'}</div>
+          <div className="flex items-center gap-1.5 font-medium">
+            {m.controparte || '—'}
+            {!!m.allegati_count && (
+              <span className="inline-flex items-center gap-0.5 text-xs font-normal text-black/40" title={`${m.allegati_count} allegati`}>
+                <Paperclip size={12} />
+                {m.allegati_count}
+              </span>
+            )}
+          </div>
           {m.descrizione && <div className="text-xs text-black/50">{m.descrizione}</div>}
         </div>
       ),
