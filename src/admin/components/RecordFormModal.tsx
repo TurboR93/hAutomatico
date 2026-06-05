@@ -68,7 +68,7 @@ function defaultForm(tipo: TipoMovimento): FormState {
     data_pagamento: '',
     imponibile: '',
     cassa_percentuale: '',
-    iva_percentuale: tipo === 'fattura_emessa' || tipo === 'fattura_ricevuta' || tipo === 'preventivo' ? '22' : '',
+    iva_percentuale: tipo === 'fattura_emessa' ? '22' : '',
     ritenuta_percentuale: tipo === 'ritenuta' ? '20' : '',
     // Il compenso si registra di norma a bonifico ricevuto: default "incassato".
     stato: tipo === 'ritenuta' ? 'incassato' : STATI_PER_TIPO[tipo][0],
@@ -115,6 +115,8 @@ function applyPrefill(base: FormState, p: Partial<Movimento>): FormState {
     preventivo_id: p.preventivo_id ?? base.preventivo_id,
     imponibile: p.imponibile_cents != null ? centsToInput(p.imponibile_cents) : base.imponibile,
     stato: p.stato ?? base.stato,
+    ricorrenza: p.ricorrenza ?? base.ricorrenza,
+    prossimo_rinnovo: p.prossimo_rinnovo ?? base.prossimo_rinnovo,
   }
 }
 

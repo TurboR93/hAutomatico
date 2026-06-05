@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   Receipt,
+  Repeat,
   Users,
 } from 'lucide-react'
 import { api } from '../api'
@@ -20,6 +21,7 @@ const links = [
   { to: '/clienti', label: 'Clienti', icon: Users, end: false },
   { to: '/preventivi', label: 'Preventivi', icon: FileSignature, end: false },
   { to: '/ritenute', label: "Ritenute d'acconto", icon: Receipt, end: false },
+  { to: '/abbonamenti', label: 'Abbonamenti', icon: Repeat, end: false },
   { to: '/fatture', label: 'Fatture', icon: FileText, end: false },
 ]
 

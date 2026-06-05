@@ -8,6 +8,7 @@ import FatturePage from './pages/FatturePage'
 import PreventiviPage from './pages/PreventiviPage'
 import RitenutePage from './pages/RitenutePage'
 import ClientiPage from './pages/ClientiPage'
+import AbbonamentiPage from './pages/AbbonamentiPage'
 
 const AdminApp = () => (
   <BrowserRouter>
@@ -26,6 +27,7 @@ const AdminApp = () => (
         <Route path="/fatture" element={<FatturePage />} />
         <Route path="/preventivi" element={<PreventiviPage />} />
         <Route path="/ritenute" element={<RitenutePage />} />
+        <Route path="/abbonamenti" element={<AbbonamentiPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
