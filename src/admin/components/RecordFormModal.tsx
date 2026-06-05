@@ -23,6 +23,7 @@ interface RecordFormModalProps {
   initial?: Movimento | null
   defaultTipo?: TipoMovimento
   lockTipo?: boolean
+  tipiOptions?: TipoMovimento[]
   fatture?: Movimento[]
   onClose: () => void
   onSaved: (record: Movimento) => void
@@ -105,6 +106,7 @@ const RecordFormModal = ({
   initial,
   defaultTipo = 'fattura_emessa',
   lockTipo = false,
+  tipiOptions = TIPI,
   fatture = [],
   onClose,
   onSaved,
@@ -249,7 +251,7 @@ const RecordFormModal = ({
                       onChange={(e) => changeTipo(e.target.value as TipoMovimento)}
                       className={inputCls}
                     >
-                      {TIPI.map((t) => (
+                      {tipiOptions.map((t) => (
                         <option key={t} value={t}>
                           {TIPO_LABEL[t]}
                         </option>

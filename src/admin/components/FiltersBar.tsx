@@ -13,15 +13,16 @@ interface FiltersBarProps {
   values: FiltersValues
   onChange: (patch: FiltersValues) => void
   showTipo?: boolean
+  tipiOptions?: TipoMovimento[]
 }
 
 const inputCls =
   'rounded-xl border border-black/15 bg-white px-3 py-2 text-sm focus:border-[#D03F29] focus:outline-none'
 
-const FiltersBar = ({ values, onChange, showTipo = true }: FiltersBarProps) => {
+const FiltersBar = ({ values, onChange, showTipo = true, tipiOptions = TIPI }: FiltersBarProps) => {
   const statiOptions = values.tipo
     ? STATI_PER_TIPO[values.tipo as TipoMovimento] || []
-    : Array.from(new Set(Object.values(STATI_PER_TIPO).flat()))
+    : Array.from(new Set(tipiOptions.flatMap((t) => STATI_PER_TIPO[t])))
 
   const hasFilters = Boolean(values.tipo || values.stato || values.q || values.from || values.to)
 
@@ -45,7 +46,7 @@ const FiltersBar = ({ values, onChange, showTipo = true }: FiltersBarProps) => {
           className={inputCls}
         >
           <option value="">Tutti i tipi</option>
-          {TIPI.map((t) => (
+          {tipiOptions.map((t) => (
             <option key={t} value={t}>
               {TIPO_LABEL[t]}
             </option>

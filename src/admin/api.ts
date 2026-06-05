@@ -42,6 +42,7 @@ export interface RecordFilters {
   to?: string
   q?: string
   limit?: number
+  gruppo?: 'movimenti' | 'preventivi'
 }
 
 function toQuery(filters: RecordFilters): string {
@@ -51,6 +52,7 @@ function toQuery(filters: RecordFilters): string {
   if (filters.from) p.set('from', filters.from)
   if (filters.to) p.set('to', filters.to)
   if (filters.q) p.set('q', filters.q)
+  if (filters.gruppo) p.set('gruppo', filters.gruppo)
   if (filters.limit) p.set('limit', String(filters.limit))
   const s = p.toString()
   return s ? `?${s}` : ''

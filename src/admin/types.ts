@@ -24,6 +24,14 @@ export const TIPO_LABEL: Record<TipoMovimento, string> = {
   preventivo: 'Preventivo',
 }
 
+// I movimenti contabili veri (il preventivo è pipeline, vive in un contesto separato).
+export const MOVIMENTO_TIPI: TipoMovimento[] = [
+  'pagamento',
+  'fattura_emessa',
+  'fattura_ricevuta',
+  'ritenuta',
+]
+
 export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
   pagamento: ['incassato'],
   fattura_emessa: ['da_fare', 'emessa', 'pagata'],

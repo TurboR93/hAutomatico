@@ -177,11 +177,14 @@ export interface ListFilters {
   to?: string | null
   q?: string | null
   limit?: number | null
+  gruppo?: string | null // 'movimenti' (tutto tranne preventivi) | 'preventivi'
 }
 
 export async function listMovimenti(db: D1Database, f: ListFilters): Promise<Movimento[]> {
   const where: string[] = []
   const binds: unknown[] = []
+  if (f.gruppo === 'movimenti') where.push("tipo <> 'preventivo'")
+  else if (f.gruppo === 'preventivi') where.push("tipo = 'preventivo'")
   if (f.tipo) { where.push('tipo = ?'); binds.push(f.tipo) }
   if (f.stato) { where.push('stato = ?'); binds.push(f.stato) }
   if (f.from) { where.push('data >= ?'); binds.push(f.from) }

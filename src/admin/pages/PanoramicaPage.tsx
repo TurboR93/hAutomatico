@@ -29,7 +29,7 @@ const recentColumns: Column<Movimento>[] = [
 
 const PanoramicaPage = () => {
   const { data: summary, loading, error } = useFetch<Summary>(() => api.summary(), [])
-  const { data: recent } = useFetch<Movimento[]>(() => api.listRecords({ limit: 8 }), [])
+  const { data: recent } = useFetch<Movimento[]>(() => api.listRecords({ gruppo: 'movimenti', limit: 8 }), [])
 
   if (loading) return <Loader />
   if (error) return <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-[#D03F29]">{error}</div>

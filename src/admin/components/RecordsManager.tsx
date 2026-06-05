@@ -22,6 +22,8 @@ interface RecordsManagerProps {
   showFilters?: boolean
   filterShowTipo?: boolean
   loadFattureForLink?: boolean
+  gruppo?: 'movimenti' | 'preventivi'
+  tipiOptions?: TipoMovimento[]
 }
 
 const RecordsManager = ({
@@ -35,6 +37,8 @@ const RecordsManager = ({
   showFilters = true,
   filterShowTipo = true,
   loadFattureForLink = false,
+  gruppo,
+  tipiOptions,
 }: RecordsManagerProps) => {
   const [filters, setFilters] = useState<FiltersValues>({})
   const [modalOpen, setModalOpen] = useState(false)
@@ -46,6 +50,7 @@ const RecordsManager = ({
   const query: RecordFilters = useMemo(
     () => ({
       ...baseFilter,
+      gruppo,
       tipo: filters.tipo || baseFilter.tipo,
       stato: filters.stato || undefined,
       q: filters.q || undefined,
@@ -53,7 +58,7 @@ const RecordsManager = ({
       to: filters.to || undefined,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filters, baseFilter.tipo],
+    [filters, baseFilter.tipo, gruppo],
   )
 
   const { data, loading, error, reload } = useFetch<Movimento[]>(() => api.listRecords(query), [query])
@@ -197,7 +202,7 @@ const RecordsManager = ({
 
       {showFilters && (
         <div className="mb-4">
-          <FiltersBar values={filters} onChange={setFilters} showTipo={filterShowTipo} />
+          <FiltersBar values={filters} onChange={setFilters} showTipo={filterShowTipo} tipiOptions={tipiOptions} />
         </div>
       )}
 
@@ -219,6 +224,7 @@ const RecordsManager = ({
         initial={editing}
         defaultTipo={defaultTipo}
         lockTipo={lockTipo}
+        tipiOptions={tipiOptions}
         fatture={fatture}
         onClose={() => setModalOpen(false)}
         onSaved={() => {

@@ -19,6 +19,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     from: p.get('from'),
     to: p.get('to'),
     q: p.get('q'),
+    gruppo: p.get('gruppo'),
     limit: limitRaw ? parseInt(limitRaw, 10) : null,
   })
   return json({ records })
