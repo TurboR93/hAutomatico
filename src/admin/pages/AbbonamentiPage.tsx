@@ -53,6 +53,38 @@ const AbbonamentiPage = () => {
     return conData.reduce((a, b) => ((a.prossimo_rinnovo || '') <= (b.prossimo_rinnovo || '') ? a : b))
   }, [abbonamenti])
 
+  // Costo dei mensili (cadenza < 1 anno): outflow costante ogni anno.
+  const mensiliMese = abbonamenti
+    .filter((m) => m.ricorrenza === 'mensile')
+    .reduce((s, m) => s + m.totale_cents, 0)
+
+  // Proiezione dei rinnovi annuali/pluriennali per i prossimi anni, a partire dalla
+  // data di prossimo rinnovo e ripetendo ogni N anni (N = mesi periodo / 12).
+  const ANNI = 6
+  const proiezione = useMemo(() => {
+    const base = new Date().getFullYear()
+    const end = base + ANNI - 1
+    const anni = Array.from({ length: ANNI }, (_, i) => ({
+      anno: base + i,
+      voci: [] as { nome: string; cents: number }[],
+      totale: 0,
+    }))
+    for (const m of abbonamenti) {
+      const mesi = MESI_PER_RICORRENZA[m.ricorrenza]
+      if (!m.prossimo_rinnovo || !mesi || mesi < 12) continue
+      const passo = mesi / 12
+      const start = parseInt(m.prossimo_rinnovo.slice(0, 4), 10)
+      if (!start) continue
+      for (let y = start; y <= end; y += passo) {
+        if (y < base) continue
+        const b = anni[y - base]
+        b.voci.push({ nome: m.controparte || '—', cents: m.totale_cents })
+        b.totale += m.totale_cents
+      }
+    }
+    return anni
+  }, [abbonamenti])
+
   const openNew = () => {
     setEditing(null)
     setActionError(null)
@@ -206,6 +238,32 @@ const AbbonamentiPage = () => {
         onRowClick={openEdit}
         emptyMessage="Nessun abbonamento. Aggiungi i servizi ricorrenti che paghi con «Nuovo abbonamento»."
       />
+
+      {abbonamenti.some((m) => m.prossimo_rinnovo) && (
+        <div className="mt-8">
+          <h2 className="mb-1 font-black">Proiezione rinnovi</h2>
+          <p className="mb-3 text-sm text-black/50">
+            Spesa dei rinnovi annuali e pluriennali, anno per anno (auto-rinnovo attivo).
+          </p>
+          <div className="divide-y divide-black/5 rounded-2xl border border-black/10 bg-white shadow-sm">
+            {proiezione.map(({ anno, voci, totale }) => (
+              <div key={anno} className="flex items-start gap-3 px-4 py-3 text-sm">
+                <div className="w-12 shrink-0 font-black">{anno}</div>
+                <div className="min-w-0 flex-1 text-black/60">
+                  {voci.length ? voci.map((v) => v.nome).join(' · ') : 'Nessun rinnovo'}
+                </div>
+                <div className="shrink-0 font-bold">{formatEuro(totale)}</div>
+              </div>
+            ))}
+          </div>
+          {mensiliMese > 0 && (
+            <p className="mt-2 text-xs text-black/40">
+              Esclusi i mensili (Google, Claude…): {formatEuro(mensiliMese)}/mese ={' '}
+              {formatEuro(mensiliMese * 12)}/anno, costanti ogni anno.
+            </p>
+          )}
+        </div>
+      )}
 
       <RecordFormModal
         open={modalOpen}
