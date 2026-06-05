@@ -23,6 +23,7 @@ interface RecordsManagerProps {
   filterShowTipo?: boolean
   gruppo?: 'movimenti' | 'preventivi'
   tipiOptions?: TipoMovimento[]
+  variant?: 'default' | 'preventivi'
 }
 
 const RecordsManager = ({
@@ -37,6 +38,7 @@ const RecordsManager = ({
   filterShowTipo = true,
   gruppo,
   tipiOptions,
+  variant = 'default',
 }: RecordsManagerProps) => {
   const [filters, setFilters] = useState<FiltersValues>({})
   const [modalOpen, setModalOpen] = useState(false)
@@ -128,13 +130,55 @@ const RecordsManager = ({
       ),
     },
     { key: 'numero', header: 'Numero', render: (m) => m.numero || '—' },
-    { key: 'totale', header: 'Totale', align: 'right', render: (m) => formatEuro(m.totale_cents) },
-    {
-      key: 'netto',
-      header: 'Netto',
-      align: 'right',
-      render: (m) => <span className="font-medium">{formatEuro(m.netto_cents)}</span>,
-    },
+    ...(variant === 'preventivi'
+      ? ([
+          {
+            key: 'totale',
+            header: 'Totale',
+            align: 'right',
+            render: (m: Movimento) => formatEuro(m.imponibile_cents),
+          },
+          {
+            key: 'incassato',
+            header: 'Incassato',
+            align: 'right',
+            render: (m: Movimento) => {
+              const tot = m.imponibile_cents
+              const inc = m.incassato_collegato || 0
+              const pct = tot > 0 ? Math.min(100, (inc / tot) * 100) : 0
+              return (
+                <div className="min-w-[90px]">
+                  <div className="font-medium">{formatEuro(inc)}</div>
+                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+                    <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            },
+          },
+          {
+            key: 'residuo',
+            header: 'Residuo',
+            align: 'right',
+            render: (m: Movimento) => {
+              const res = m.imponibile_cents - (m.incassato_collegato || 0)
+              return res <= 0 && m.imponibile_cents > 0 ? (
+                <span className="font-bold text-emerald-700">Saldato</span>
+              ) : (
+                <span className="font-medium">{formatEuro(res)}</span>
+              )
+            },
+          },
+        ] as Column<Movimento>[])
+      : ([
+          { key: 'totale', header: 'Totale', align: 'right', render: (m: Movimento) => formatEuro(m.totale_cents) },
+          {
+            key: 'netto',
+            header: 'Netto',
+            align: 'right',
+            render: (m: Movimento) => <span className="font-medium">{formatEuro(m.netto_cents)}</span>,
+          },
+        ] as Column<Movimento>[])),
     {
       key: 'stato',
       header: 'Stato',

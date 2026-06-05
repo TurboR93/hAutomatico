@@ -7,6 +7,7 @@ import { computeAmounts, grossUpToImponibile } from '../money'
 import { centsToInput, euroToCents, formatEuro, formatFileSize, oggiISO } from '../format'
 import {
   Allegato,
+  isEntrata,
   Movimento,
   MovimentoInput,
   RICORRENZA_LABEL,
@@ -42,6 +43,7 @@ interface FormState {
   ritenuta_percentuale: string
   stato: string
   fattura_id: string
+  preventivo_id: string
   note: string
   ricorrenza: string
   prossimo_rinnovo: string
@@ -66,6 +68,7 @@ function defaultForm(tipo: TipoMovimento): FormState {
     // Il compenso si registra di norma a bonifico ricevuto: default "incassato".
     stato: tipo === 'ritenuta' ? 'incassato' : STATI_PER_TIPO[tipo][0],
     fattura_id: '',
+    preventivo_id: '',
     note: '',
     ricorrenza: 'una_tantum',
     prossimo_rinnovo: '',
@@ -87,6 +90,7 @@ function formFromMovimento(m: Movimento): FormState {
     ritenuta_percentuale: m.ritenuta_percentuale ? String(m.ritenuta_percentuale) : '',
     stato: m.stato || STATI_PER_TIPO[m.tipo][0],
     fattura_id: m.fattura_id || '',
+    preventivo_id: m.preventivo_id || '',
     note: m.note || '',
     ricorrenza: m.ricorrenza || 'una_tantum',
     prossimo_rinnovo: m.prossimo_rinnovo || '',
@@ -116,6 +120,7 @@ const RecordFormModal = ({
   const [allegati, setAllegati] = useState<Allegato[]>([])
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [importoNetto, setImportoNetto] = useState(false)
+  const [preventivi, setPreventivi] = useState<Movimento[]>([])
 
   useEffect(() => {
     if (!open) return
@@ -126,6 +131,11 @@ const RecordFormModal = ({
     // ritenuta si aggiunge sopra. In modifica si mostra invece il lordo già salvato.
     setImportoNetto(!initial && defaultTipo === 'ritenuta')
     setForm(initial ? formFromMovimento(initial) : defaultForm(defaultTipo))
+    // Preventivi disponibili per il collegamento di un incasso.
+    api
+      .listRecords({ gruppo: 'preventivi' })
+      .then(setPreventivi)
+      .catch(() => setPreventivi([]))
     if (initial) {
       api
         .listAllegati(initial.id)
@@ -162,18 +172,29 @@ const RecordFormModal = ({
   // Compenso da prestazione occasionale (privato senza P.IVA): solo ritenuta d'acconto,
   // niente cassa né IVA.
   const isCompenso = form.tipo === 'ritenuta'
-  const showFiscal = !isPagamento
+  // Il preventivo è riferito all'incasso effettivo: importo netto, niente IVA/ritenuta.
+  const isPreventivo = form.tipo === 'preventivo'
+  const isSimple = isPagamento || isPreventivo
+  const showFiscal = !isSimple
   const showCassaIva = showFiscal && !isCompenso
   const showScadenza = form.tipo === 'fattura_emessa' || form.tipo === 'fattura_ricevuta'
+  // Un incasso (pagamento, compenso, fattura emessa) può essere collegato a un preventivo.
+  const canLinkPreventivo = isEntrata(form.tipo)
   const importoLabel = isCompenso
     ? importoNetto
       ? 'Netto incassato (bonifico)'
       : 'Compenso lordo'
-    : isPagamento
-      ? 'Importo'
-      : 'Imponibile (compenso)'
+    : isPreventivo
+      ? 'Importo (incasso previsto)'
+      : isPagamento
+        ? 'Importo'
+        : 'Imponibile (compenso)'
   const controparteLabel = form.tipo === 'fattura_ricevuta' ? 'Fornitore' : 'Cliente'
-  const dataLabel = form.tipo === 'preventivo' ? 'Data firma' : 'Data documento'
+  const dataLabel = isPreventivo ? 'Data firma' : 'Data documento'
+  // Preventivi selezionabili: quelli aperti + l'eventuale già collegato.
+  const linkablePreventivi = preventivi.filter(
+    (p) => p.stato === 'firmato' || p.stato === 'in_corso' || p.id === form.preventivo_id,
+  )
 
   const cassaP = showCassaIva ? Number(form.cassa_percentuale) || 0 : 0
   const ivaP = showCassaIva ? Number(form.iva_percentuale) || 0 : 0
@@ -207,6 +228,7 @@ const RecordFormModal = ({
       ritenuta_percentuale: ritP,
       stato: form.stato,
       fattura_id: null,
+      preventivo_id: canLinkPreventivo ? form.preventivo_id || null : null,
       note: form.note,
       ricorrenza: form.ricorrenza,
       prossimo_rinnovo: form.ricorrenza !== 'una_tantum' ? form.prossimo_rinnovo || null : null,
@@ -350,6 +372,26 @@ const RecordFormModal = ({
                       onChange={(e) => set({ prossimo_rinnovo: e.target.value })}
                       className={inputCls}
                     />
+                  </Field>
+                )}
+
+                {canLinkPreventivo && (
+                  <Field label="Collega a preventivo" hint="Scala l'incasso dal residuo del preventivo">
+                    <select
+                      value={form.preventivo_id}
+                      onChange={(e) => set({ preventivo_id: e.target.value })}
+                      className={inputCls}
+                    >
+                      <option value="">— nessuno —</option>
+                      {linkablePreventivi.map((p) => {
+                        const residuo = p.imponibile_cents - (p.incassato_collegato || 0)
+                        return (
+                          <option key={p.id} value={p.id}>
+                            {(p.numero || 's.n.') + ' · ' + (p.controparte || '—') + ' · residuo ' + formatEuro(residuo)}
+                          </option>
+                        )
+                      })}
+                    </select>
                   </Field>
                 )}
 

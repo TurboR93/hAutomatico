@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS movimenti (
 
   stato           TEXT,                          -- macchina a stati per tipo (validata server-side)
   fattura_id      TEXT REFERENCES movimenti(id), -- soft FK (legacy, non più usato dai compensi)
+  preventivo_id   TEXT REFERENCES movimenti(id), -- soft FK: incasso -> preventivo collegato
   note            TEXT,
 
   ricorrenza        TEXT NOT NULL DEFAULT 'una_tantum', -- 'una_tantum'|'mensile'|'annuale'
@@ -48,6 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_movimenti_tipo       ON movimenti(tipo);
 CREATE INDEX IF NOT EXISTS idx_movimenti_stato      ON movimenti(tipo, stato);
 CREATE INDEX IF NOT EXISTS idx_movimenti_data       ON movimenti(data);
 CREATE INDEX IF NOT EXISTS idx_movimenti_fattura_id ON movimenti(fattura_id);
+CREATE INDEX IF NOT EXISTS idx_movimenti_preventivo_id ON movimenti(preventivo_id);
 
 -- Anti brute-force sul login: conteggio tentativi falliti per IP.
 CREATE TABLE IF NOT EXISTS login_attempts (

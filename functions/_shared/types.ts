@@ -66,12 +66,14 @@ export interface Movimento {
   netto_cents: number
   stato: string | null
   fattura_id: string | null
+  preventivo_id: string | null
   note: string | null
   ricorrenza: string
   prossimo_rinnovo: string | null
   created_at: number
   updated_at: number
   allegati_count?: number
+  incassato_collegato?: number
 }
 
 // Campi accettati in input (gli importi calcolati vengono ricalcolati server-side).
@@ -89,6 +91,7 @@ export interface MovimentoInput {
   ritenuta_percentuale?: number
   stato?: string | null
   fattura_id?: string | null
+  preventivo_id?: string | null
   note?: string | null
   ricorrenza?: string | null
   prossimo_rinnovo?: string | null

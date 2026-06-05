@@ -90,6 +90,7 @@ export function validateInput(
   if (b.iva_percentuale !== undefined) input.iva_percentuale = clampPerc(b.iva_percentuale)
   if (b.ritenuta_percentuale !== undefined) input.ritenuta_percentuale = clampPerc(b.ritenuta_percentuale)
   if (b.fattura_id !== undefined) input.fattura_id = str(b.fattura_id)
+  if (b.preventivo_id !== undefined) input.preventivo_id = str(b.preventivo_id)
   if (b.note !== undefined) input.note = str(b.note)
   if (stato !== undefined) input.stato = stato
   if (b.ricorrenza !== undefined) {
@@ -106,7 +107,7 @@ const COLUMNS = [
   'id', 'tipo', 'controparte', 'descrizione', 'numero', 'data', 'data_scadenza',
   'data_pagamento', 'imponibile_cents', 'cassa_percentuale', 'cassa_cents',
   'iva_percentuale', 'iva_cents', 'ritenuta_percentuale', 'ritenuta_cents',
-  'totale_cents', 'netto_cents', 'stato', 'fattura_id', 'note',
+  'totale_cents', 'netto_cents', 'stato', 'fattura_id', 'preventivo_id', 'note',
   'ricorrenza', 'prossimo_rinnovo', 'created_at', 'updated_at',
 ]
 
@@ -125,7 +126,7 @@ export function buildMovimento(input: MovimentoInput, existing?: Movimento): Mov
     imponibile_cents: 0, cassa_percentuale: 0, cassa_cents: 0,
     iva_percentuale: 0, iva_cents: 0, ritenuta_percentuale: 0, ritenuta_cents: 0,
     totale_cents: 0, netto_cents: 0,
-    stato: STATO_DEFAULT[input.tipo], fattura_id: null, note: null,
+    stato: STATO_DEFAULT[input.tipo], fattura_id: null, preventivo_id: null, note: null,
     ricorrenza: 'una_tantum', prossimo_rinnovo: null,
     created_at: now, updated_at: now,
   }
@@ -146,6 +147,7 @@ export function buildMovimento(input: MovimentoInput, existing?: Movimento): Mov
     data_pagamento: has('data_pagamento') ? input.data_pagamento ?? null : base.data_pagamento,
     stato: (has('stato') ? input.stato : base.stato) || STATO_DEFAULT[tipo],
     fattura_id: has('fattura_id') ? input.fattura_id ?? null : base.fattura_id,
+    preventivo_id: has('preventivo_id') ? input.preventivo_id ?? null : base.preventivo_id,
     note: has('note') ? input.note ?? null : base.note,
     ricorrenza: (has('ricorrenza') ? input.ricorrenza : base.ricorrenza) || 'una_tantum',
     prossimo_rinnovo: has('prossimo_rinnovo') ? input.prossimo_rinnovo ?? null : base.prossimo_rinnovo,
@@ -195,8 +197,20 @@ export async function listMovimenti(db: D1Database, f: ListFilters): Promise<Mov
     const like = `%${f.q}%`
     binds.push(like, like, like)
   }
+  // incassato_collegato: per i preventivi, netto dei movimenti collegati ed
+  // effettivamente incassati (pagamenti, compensi 'incassato', fatture 'pagata').
+  const incassatoCollegato = `(
+    SELECT COALESCE(SUM(c.netto_cents), 0) FROM movimenti c
+    WHERE c.preventivo_id = movimenti.id
+      AND (c.tipo='pagamento'
+           OR (c.tipo='ritenuta' AND c.stato='incassato')
+           OR (c.tipo='fattura_emessa' AND c.stato='pagata'))
+  )`
   let sql =
-    'SELECT *, (SELECT COUNT(*) FROM allegati a WHERE a.movimento_id = movimenti.id) AS allegati_count FROM movimenti'
+    'SELECT *,' +
+    ' (SELECT COUNT(*) FROM allegati a WHERE a.movimento_id = movimenti.id) AS allegati_count,' +
+    ` ${incassatoCollegato} AS incassato_collegato` +
+    ' FROM movimenti'
   if (where.length) sql += ' WHERE ' + where.join(' AND ')
   sql += ' ORDER BY COALESCE(data, "") DESC, created_at DESC'
   if (f.limit && f.limit > 0) { sql += ' LIMIT ?'; binds.push(f.limit) }

@@ -93,12 +93,16 @@ export interface Movimento {
   netto_cents: number
   stato: string | null
   fattura_id: string | null
+  preventivo_id: string | null
   note: string | null
   ricorrenza: string
   prossimo_rinnovo: string | null
   created_at: number
   updated_at: number
   allegati_count?: number
+  // Solo in lettura: netto dei movimenti collegati ed effettivamente incassati
+  // (valorizzato per i preventivi).
+  incassato_collegato?: number
 }
 
 export interface MovimentoInput {
@@ -115,6 +119,7 @@ export interface MovimentoInput {
   ritenuta_percentuale?: number
   stato?: string | null
   fattura_id?: string | null
+  preventivo_id?: string | null
   note?: string | null
   ricorrenza?: string | null
   prossimo_rinnovo?: string | null
