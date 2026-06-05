@@ -15,9 +15,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
                           OR (tipo='ritenuta' AND stato='incassato') THEN netto_cents ELSE 0 END), 0) AS incassato,
       COALESCE(SUM(CASE WHEN (tipo='fattura_emessa' AND stato<>'pagata')
                           OR (tipo='ritenuta' AND stato='da_incassare') THEN netto_cents ELSE 0 END), 0) AS daIncassare,
-      COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' THEN totale_cents ELSE 0 END), 0) AS spese,
-      COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND stato='pagata' THEN totale_cents ELSE 0 END), 0) AS spesePagate,
-      COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND stato<>'pagata' THEN totale_cents ELSE 0 END), 0) AS speseDaPagare,
+      COALESCE(SUM(CASE WHEN tipo IN ('fattura_ricevuta','spesa') THEN totale_cents ELSE 0 END), 0) AS spese,
+      COALESCE(SUM(CASE WHEN tipo IN ('fattura_ricevuta','spesa') AND stato='pagata' THEN totale_cents ELSE 0 END), 0) AS spesePagate,
+      COALESCE(SUM(CASE WHEN tipo IN ('fattura_ricevuta','spesa') AND stato<>'pagata' THEN totale_cents ELSE 0 END), 0) AS speseDaPagare,
       COALESCE(SUM(CASE WHEN tipo='ritenuta' AND ${annoCompenso} THEN imponibile_cents ELSE 0 END), 0) AS compensiLordiAnno,
       COALESCE(SUM(CASE WHEN tipo='ritenuta' AND ${annoCompenso} THEN netto_cents ELSE 0 END), 0) AS compensiNettiAnno,
       COALESCE(SUM(CASE WHEN tipo='ritenuta' AND ${annoCompenso} THEN ritenuta_cents ELSE 0 END), 0) AS ritenuteAnno,
@@ -25,8 +25,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       COALESCE(SUM(CASE WHEN tipo='fattura_emessa' AND ricorrenza='mensile' THEN imponibile_cents*12
                         WHEN tipo='fattura_emessa' AND ricorrenza='annuale' THEN imponibile_cents
                         ELSE 0 END), 0) AS entrateRicorrentiAnnue,
-      COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND ricorrenza='mensile' THEN totale_cents*12
-                        WHEN tipo='fattura_ricevuta' AND ricorrenza='annuale' THEN totale_cents
+      COALESCE(SUM(CASE WHEN tipo IN ('fattura_ricevuta','spesa') AND ricorrenza='mensile' THEN totale_cents*12
+                        WHEN tipo IN ('fattura_ricevuta','spesa') AND ricorrenza='annuale' THEN totale_cents
                         ELSE 0 END), 0) AS usciteRicorrentiAnnue
     FROM movimenti
   `
@@ -45,7 +45,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       COALESCE(SUM(CASE WHEN tipo='pagamento'
                           OR (tipo='fattura_emessa' AND stato='pagata')
                           OR (tipo='ritenuta' AND stato='incassato') THEN netto_cents ELSE 0 END), 0) AS incassi,
-      COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND stato='pagata' THEN totale_cents ELSE 0 END), 0) AS spese
+      COALESCE(SUM(CASE WHEN tipo IN ('fattura_ricevuta','spesa') AND stato='pagata' THEN totale_cents ELSE 0 END), 0) AS spese
     FROM movimenti
     WHERE COALESCE(data_pagamento, data) IS NOT NULL
     GROUP BY mese

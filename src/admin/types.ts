@@ -3,6 +3,7 @@
 
 export type TipoMovimento =
   | 'pagamento'
+  | 'spesa'
   | 'fattura_emessa'
   | 'fattura_ricevuta'
   | 'ritenuta'
@@ -10,6 +11,7 @@ export type TipoMovimento =
 
 export const TIPI: TipoMovimento[] = [
   'pagamento',
+  'spesa',
   'fattura_emessa',
   'fattura_ricevuta',
   'ritenuta',
@@ -18,6 +20,7 @@ export const TIPI: TipoMovimento[] = [
 
 export const TIPO_LABEL: Record<TipoMovimento, string> = {
   pagamento: 'Pagamento ricevuto',
+  spesa: 'Spesa',
   fattura_emessa: 'Fattura emessa',
   fattura_ricevuta: 'Fattura ricevuta',
   ritenuta: "Compenso (ritenuta d'acconto)",
@@ -31,6 +34,7 @@ export const SOGLIA_COMPENSI_CENTS = 500000
 // I movimenti contabili veri (il preventivo è pipeline, vive in un contesto separato).
 export const MOVIMENTO_TIPI: TipoMovimento[] = [
   'pagamento',
+  'spesa',
   'fattura_emessa',
   'fattura_ricevuta',
   'ritenuta',
@@ -38,6 +42,8 @@ export const MOVIMENTO_TIPI: TipoMovimento[] = [
 
 export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
   pagamento: ['incassato'],
+  // Spesa semplice (anche ricorrente): di norma registrata già pagata.
+  spesa: ['pagata', 'da_pagare'],
   fattura_emessa: ['da_fare', 'emessa', 'pagata'],
   fattura_ricevuta: ['da_pagare', 'pagata'],
   // Compenso occasionale: lo incassi (la ritenuta la versa il committente, non tu).

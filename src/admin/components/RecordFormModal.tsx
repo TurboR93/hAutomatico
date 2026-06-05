@@ -224,12 +224,16 @@ const RecordFormModal = ({
   const isCompenso = form.tipo === 'ritenuta'
   // Il preventivo è riferito all'incasso effettivo: importo netto, niente IVA/ritenuta.
   const isPreventivo = form.tipo === 'preventivo'
-  const isSimple = isPagamento || isPreventivo
+  // Spesa semplice (anche ricorrente): importo secco, niente IVA/cassa/ritenuta.
+  const isSpesa = form.tipo === 'spesa'
+  const isSimple = isPagamento || isPreventivo || isSpesa
   const showFiscal = !isSimple
   const showCassaIva = showFiscal && !isCompenso
   const showScadenza = form.tipo === 'fattura_emessa' || form.tipo === 'fattura_ricevuta'
-  // La fattura ricevuta è verso un fornitore (testo libero); tutto il resto è verso un cliente.
-  const isFornitore = form.tipo === 'fattura_ricevuta'
+  // La ricorrenza (una tantum / mensile / annuale) vale per fatture e spese.
+  const showRicorrenza = form.tipo === 'fattura_emessa' || form.tipo === 'fattura_ricevuta' || isSpesa
+  // Fattura ricevuta e spesa sono verso un fornitore (testo libero); il resto verso un cliente.
+  const isFornitore = form.tipo === 'fattura_ricevuta' || isSpesa
   const clientFacing = !isFornitore
   // Un incasso (pagamento, compenso, fattura emessa) può essere collegato a un preventivo.
   const canLinkPreventivo = isEntrata(form.tipo)
@@ -239,11 +243,11 @@ const RecordFormModal = ({
       : 'Compenso lordo'
     : isPreventivo
       ? 'Importo (incasso previsto)'
-      : isPagamento
+      : isPagamento || isSpesa
         ? 'Importo'
         : 'Imponibile (compenso)'
-  const controparteLabel = form.tipo === 'fattura_ricevuta' ? 'Fornitore' : 'Cliente'
-  const dataLabel = isPreventivo ? 'Data firma' : 'Data documento'
+  const controparteLabel = isFornitore ? 'Fornitore / servizio' : 'Cliente'
+  const dataLabel = isPreventivo ? 'Data firma' : isSpesa ? 'Data spesa' : 'Data documento'
   // Preventivi selezionabili: quelli aperti + l'eventuale già collegato.
   const linkablePreventivi = preventivi.filter(
     (p) => p.stato === 'firmato' || p.stato === 'in_corso' || p.id === form.preventivo_id,
@@ -425,7 +429,7 @@ const RecordFormModal = ({
                   />
                 </Field>
 
-                {showFiscal && (
+                {showRicorrenza && (
                   <Field label="Ricorrenza">
                     <select
                       value={form.ricorrenza}
@@ -441,7 +445,7 @@ const RecordFormModal = ({
                   </Field>
                 )}
 
-                {showFiscal && form.ricorrenza !== 'una_tantum' && (
+                {showRicorrenza && form.ricorrenza !== 'una_tantum' && (
                   <Field label="Prossimo rinnovo" hint="Quando va rinnovata/rifatturata">
                     <input
                       type="date"

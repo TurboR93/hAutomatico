@@ -18,7 +18,7 @@ const alMese = (m: Movimento) => (m.ricorrenza === 'annuale' ? Math.round(m.tota
 
 const AbbonamentiPage = () => {
   const { data, loading, error, reload } = useFetch<Movimento[]>(
-    () => api.listRecords({ gruppo: 'movimenti', tipo: 'fattura_ricevuta' }),
+    () => api.listRecords({ gruppo: 'movimenti' }),
     [],
   )
   const [modalOpen, setModalOpen] = useState(false)
@@ -27,9 +27,15 @@ const AbbonamentiPage = () => {
   const [toDelete, setToDelete] = useState<Movimento | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  // Solo gli abbonamenti: spese con ricorrenza mensile/annuale.
+  // Solo gli abbonamenti: uscite (spese / fatture ricevute) con ricorrenza mensile/annuale.
   const abbonamenti = useMemo(
-    () => (data || []).filter((m) => m.ricorrenza && m.ricorrenza !== 'una_tantum'),
+    () =>
+      (data || []).filter(
+        (m) =>
+          (m.tipo === 'spesa' || m.tipo === 'fattura_ricevuta') &&
+          m.ricorrenza &&
+          m.ricorrenza !== 'una_tantum',
+      ),
     [data],
   )
 
@@ -43,7 +49,7 @@ const AbbonamentiPage = () => {
   const openNew = () => {
     setEditing(null)
     setActionError(null)
-    setPrefill({ tipo: 'fattura_ricevuta', ricorrenza: 'mensile', stato: 'da_pagare' })
+    setPrefill({ tipo: 'spesa', ricorrenza: 'mensile', stato: 'pagata' })
     setModalOpen(true)
   }
   const openEdit = (m: Movimento) => {
@@ -197,7 +203,7 @@ const AbbonamentiPage = () => {
       <RecordFormModal
         open={modalOpen}
         initial={editing}
-        defaultTipo="fattura_ricevuta"
+        defaultTipo="spesa"
         prefill={prefill}
         onClose={() => {
           setModalOpen(false)

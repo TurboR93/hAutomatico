@@ -41,6 +41,7 @@ export interface ClienteInput {
 
 export type TipoMovimento =
   | 'pagamento'
+  | 'spesa'
   | 'fattura_emessa'
   | 'fattura_ricevuta'
   | 'ritenuta'
@@ -48,6 +49,7 @@ export type TipoMovimento =
 
 export const TIPI: TipoMovimento[] = [
   'pagamento',
+  'spesa',
   'fattura_emessa',
   'fattura_ricevuta',
   'ritenuta',
@@ -60,6 +62,7 @@ export const RICORRENZE: Ricorrenza[] = ['una_tantum', 'mensile', 'annuale']
 // Stati ammessi per ciascun tipo (macchina a stati, validata lato server).
 export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
   pagamento: ['incassato'],
+  spesa: ['pagata', 'da_pagare'],
   fattura_emessa: ['da_fare', 'emessa', 'pagata'],
   fattura_ricevuta: ['da_pagare', 'pagata'],
   // Compenso occasionale: lo incassi (la ritenuta la versa il committente, non tu).

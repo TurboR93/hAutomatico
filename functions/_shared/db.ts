@@ -30,6 +30,7 @@ export function errorJson(message: string, status = 400): Response {
 // Stato di default per ciascun tipo quando non specificato.
 const STATO_DEFAULT: Record<TipoMovimento, string> = {
   pagamento: 'incassato',
+  spesa: 'pagata',
   fattura_emessa: 'da_fare',
   fattura_ricevuta: 'da_pagare',
   // Il compenso si registra di norma dopo aver ricevuto il bonifico: default "incassato".
