@@ -71,12 +71,21 @@ export const STATO_LABEL: Record<string, string> = {
 // Stati che indicano "denaro effettivamente movimentato".
 export const STATI_CONCLUSI = new Set(['incassato', 'pagata', 'versata'])
 
-export type Ricorrenza = 'una_tantum' | 'mensile' | 'annuale'
-export const RICORRENZE: Ricorrenza[] = ['una_tantum', 'mensile', 'annuale']
+export type Ricorrenza = 'una_tantum' | 'mensile' | 'annuale' | 'biennale' | 'quadriennale'
+export const RICORRENZE: Ricorrenza[] = ['una_tantum', 'mensile', 'annuale', 'biennale', 'quadriennale']
 export const RICORRENZA_LABEL: Record<string, string> = {
   una_tantum: 'Una tantum',
   mensile: 'Mensile',
   annuale: 'Annuale',
+  biennale: 'Ogni 2 anni',
+  quadriennale: 'Ogni 4 anni',
+}
+// Mesi coperti da un periodo, per normalizzare i costi ricorrenti.
+export const MESI_PER_RICORRENZA: Record<string, number> = {
+  mensile: 1,
+  annuale: 12,
+  biennale: 24,
+  quadriennale: 48,
 }
 
 export interface Movimento {

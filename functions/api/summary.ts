@@ -27,6 +27,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
                         ELSE 0 END), 0) AS entrateRicorrentiAnnue,
       COALESCE(SUM(CASE WHEN tipo IN ('fattura_ricevuta','spesa') AND ricorrenza='mensile' THEN totale_cents*12
                         WHEN tipo IN ('fattura_ricevuta','spesa') AND ricorrenza='annuale' THEN totale_cents
+                        WHEN tipo IN ('fattura_ricevuta','spesa') AND ricorrenza='biennale' THEN totale_cents/2
+                        WHEN tipo IN ('fattura_ricevuta','spesa') AND ricorrenza='quadriennale' THEN totale_cents/4
                         ELSE 0 END), 0) AS usciteRicorrentiAnnue
     FROM movimenti
   `

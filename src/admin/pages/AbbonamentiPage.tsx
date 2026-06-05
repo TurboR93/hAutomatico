@@ -3,7 +3,7 @@ import { CalendarClock, Hash, Pencil, Plus, Repeat, Trash2, TrendingDown } from 
 import { api } from '../api'
 import { isAuthError, messageOf, useFetch } from '../useFetch'
 import { formatData, formatEuro } from '../format'
-import { Movimento, RICORRENZA_LABEL, STATI_PER_TIPO } from '../types'
+import { MESI_PER_RICORRENZA, Movimento, RICORRENZA_LABEL, STATI_PER_TIPO } from '../types'
 import KpiCard from '../components/KpiCard'
 import DataTable, { Column } from '../components/DataTable'
 import StatoBadge from '../components/StatoBadge'
@@ -13,8 +13,15 @@ import Loader from '../components/Loader'
 
 // Importo periodico dell'abbonamento (quello che paghi): totale documento.
 const periodo = (m: Movimento) => m.totale_cents
-// Costo normalizzato al mese (annuale / 12).
-const alMese = (m: Movimento) => (m.ricorrenza === 'annuale' ? Math.round(m.totale_cents / 12) : m.totale_cents)
+// Costo normalizzato al mese: totale / mesi coperti dal periodo.
+const alMese = (m: Movimento) => Math.round(m.totale_cents / (MESI_PER_RICORRENZA[m.ricorrenza] || 1))
+// Suffisso compatto della cadenza accanto all'importo.
+const CADENZA_SUFFISSO: Record<string, string> = {
+  mensile: '/mese',
+  annuale: '/anno',
+  biennale: '/2 anni',
+  quadriennale: '/4 anni',
+}
 
 const AbbonamentiPage = () => {
   const { data, loading, error, reload } = useFetch<Movimento[]>(
@@ -101,7 +108,7 @@ const AbbonamentiPage = () => {
       render: (m) => (
         <span className="font-medium">
           {formatEuro(periodo(m))}
-          <span className="text-xs font-normal text-black/40"> /{m.ricorrenza === 'mensile' ? 'mese' : 'anno'}</span>
+          <span className="text-xs font-normal text-black/40"> {CADENZA_SUFFISSO[m.ricorrenza] || ''}</span>
         </span>
       ),
     },

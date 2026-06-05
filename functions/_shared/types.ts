@@ -56,8 +56,8 @@ export const TIPI: TipoMovimento[] = [
   'preventivo',
 ]
 
-export type Ricorrenza = 'una_tantum' | 'mensile' | 'annuale'
-export const RICORRENZE: Ricorrenza[] = ['una_tantum', 'mensile', 'annuale']
+export type Ricorrenza = 'una_tantum' | 'mensile' | 'annuale' | 'biennale' | 'quadriennale'
+export const RICORRENZE: Ricorrenza[] = ['una_tantum', 'mensile', 'annuale', 'biennale', 'quadriennale']
 
 // Stati ammessi per ciascun tipo (macchina a stati, validata lato server).
 export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
