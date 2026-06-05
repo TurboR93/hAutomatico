@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Paperclip, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
+import { Banknote, Paperclip, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
 import { api, RecordFilters } from '../api'
 import { isAuthError, messageOf, useFetch } from '../useFetch'
 import { formatData, formatEuro } from '../format'
 import { Movimento, RICORRENZA_LABEL, STATI_PER_TIPO, TIPO_LABEL, TipoMovimento } from '../types'
+
+// Tipi proponibili quando si registra un incasso da un preventivo.
+const INCASSO_TIPI: TipoMovimento[] = ['pagamento', 'ritenuta', 'fattura_emessa']
 import DataTable, { Column } from './DataTable'
 import StatoBadge from './StatoBadge'
 import RecordFormModal from './RecordFormModal'
@@ -44,6 +47,7 @@ const RecordsManager = ({
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Movimento | null>(null)
   const [toDelete, setToDelete] = useState<Movimento | null>(null)
+  const [incassoPrefill, setIncassoPrefill] = useState<Partial<Movimento> | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const query: RecordFilters = useMemo(
@@ -66,12 +70,30 @@ const RecordsManager = ({
 
   const openNew = () => {
     setEditing(null)
+    setIncassoPrefill(null)
     setActionError(null)
     setModalOpen(true)
   }
   const openEdit = (m: Movimento) => {
     setEditing(m)
+    setIncassoPrefill(null)
     setActionError(null)
+    setModalOpen(true)
+  }
+  // Registra un incasso a partire da un preventivo: precompila cliente, link e residuo.
+  const openRegistraIncasso = (p: Movimento) => {
+    const residuo = Math.max(0, p.imponibile_cents - (p.incassato_collegato || 0))
+    setEditing(null)
+    setActionError(null)
+    setIncassoPrefill({
+      tipo: 'ritenuta',
+      controparte: p.controparte,
+      cliente_id: p.cliente_id,
+      preventivo_id: p.id,
+      descrizione: p.descrizione,
+      imponibile_cents: residuo,
+      stato: 'incassato',
+    })
     setModalOpen(true)
   }
 
@@ -192,6 +214,19 @@ const RecordsManager = ({
       align: 'right',
       render: (m) => (
         <div className="flex justify-end gap-1">
+          {variant === 'preventivi' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                openRegistraIncasso(m)
+              }}
+              className="rounded-lg p-1.5 text-emerald-700 hover:bg-emerald-50"
+              aria-label="Registra incasso"
+              title="Registra incasso da questo preventivo"
+            >
+              <Banknote size={16} />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -255,12 +290,17 @@ const RecordsManager = ({
       <RecordFormModal
         open={modalOpen}
         initial={editing}
-        defaultTipo={defaultTipo}
-        lockTipo={lockTipo}
-        tipiOptions={tipiOptions}
-        onClose={() => setModalOpen(false)}
+        defaultTipo={incassoPrefill ? 'ritenuta' : defaultTipo}
+        lockTipo={incassoPrefill ? false : lockTipo}
+        tipiOptions={incassoPrefill ? INCASSO_TIPI : tipiOptions}
+        prefill={incassoPrefill}
+        onClose={() => {
+          setModalOpen(false)
+          setIncassoPrefill(null)
+        }}
         onSaved={() => {
           setModalOpen(false)
+          setIncassoPrefill(null)
           reload()
         }}
       />

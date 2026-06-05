@@ -1,7 +1,7 @@
 // Client tipizzato per le API /api/* dell'area amministrazione.
 // Tutte le richieste includono il cookie di sessione (credentials: 'include').
 
-import { Allegato, Movimento, MovimentoInput, Summary } from './types'
+import { Allegato, Cliente, ClienteInput, Movimento, MovimentoInput, Summary } from './types'
 
 export class ApiError extends Error {
   status: number
@@ -107,6 +107,34 @@ export const api = {
 
   async summary(): Promise<Summary> {
     return request<Summary>('/summary')
+  },
+
+  // ---------- clienti ----------
+
+  async listClienti(q?: string): Promise<Cliente[]> {
+    const qs = q ? `?q=${encodeURIComponent(q)}` : ''
+    const r = await request<{ clienti: Cliente[] }>(`/clienti${qs}`)
+    return r.clienti
+  },
+
+  async createCliente(input: ClienteInput): Promise<Cliente> {
+    const r = await request<{ cliente: Cliente }>('/clienti', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+    return r.cliente
+  },
+
+  async updateCliente(id: string, input: ClienteInput): Promise<Cliente> {
+    const r = await request<{ cliente: Cliente }>(`/clienti/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    })
+    return r.cliente
+  },
+
+  async deleteCliente(id: string): Promise<void> {
+    await request(`/clienti/${id}`, { method: 'DELETE' })
   },
 
   exportUrl(format: 'json' | 'csv'): string {

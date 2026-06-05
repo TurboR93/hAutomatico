@@ -7,6 +7,7 @@ import MovimentiPage from './pages/MovimentiPage'
 import FatturePage from './pages/FatturePage'
 import PreventiviPage from './pages/PreventiviPage'
 import RitenutePage from './pages/RitenutePage'
+import ClientiPage from './pages/ClientiPage'
 
 const AdminApp = () => (
   <BrowserRouter>
@@ -21,6 +22,7 @@ const AdminApp = () => (
       >
         <Route path="/" element={<PanoramicaPage />} />
         <Route path="/movimenti" element={<MovimentiPage />} />
+        <Route path="/clienti" element={<ClientiPage />} />
         <Route path="/fatture" element={<FatturePage />} />
         <Route path="/preventivi" element={<PreventiviPage />} />
         <Route path="/ritenute" element={<RitenutePage />} />

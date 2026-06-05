@@ -3,6 +3,8 @@
 import { computeAmounts } from './money'
 import {
   Allegato,
+  Cliente,
+  ClienteInput,
   Movimento,
   MovimentoInput,
   Ricorrenza,
@@ -91,6 +93,7 @@ export function validateInput(
   if (b.ritenuta_percentuale !== undefined) input.ritenuta_percentuale = clampPerc(b.ritenuta_percentuale)
   if (b.fattura_id !== undefined) input.fattura_id = str(b.fattura_id)
   if (b.preventivo_id !== undefined) input.preventivo_id = str(b.preventivo_id)
+  if (b.cliente_id !== undefined) input.cliente_id = str(b.cliente_id)
   if (b.note !== undefined) input.note = str(b.note)
   if (stato !== undefined) input.stato = stato
   if (b.ricorrenza !== undefined) {
@@ -107,7 +110,7 @@ const COLUMNS = [
   'id', 'tipo', 'controparte', 'descrizione', 'numero', 'data', 'data_scadenza',
   'data_pagamento', 'imponibile_cents', 'cassa_percentuale', 'cassa_cents',
   'iva_percentuale', 'iva_cents', 'ritenuta_percentuale', 'ritenuta_cents',
-  'totale_cents', 'netto_cents', 'stato', 'fattura_id', 'preventivo_id', 'note',
+  'totale_cents', 'netto_cents', 'stato', 'fattura_id', 'preventivo_id', 'cliente_id', 'note',
   'ricorrenza', 'prossimo_rinnovo', 'created_at', 'updated_at',
 ]
 
@@ -126,7 +129,7 @@ export function buildMovimento(input: MovimentoInput, existing?: Movimento): Mov
     imponibile_cents: 0, cassa_percentuale: 0, cassa_cents: 0,
     iva_percentuale: 0, iva_cents: 0, ritenuta_percentuale: 0, ritenuta_cents: 0,
     totale_cents: 0, netto_cents: 0,
-    stato: STATO_DEFAULT[input.tipo], fattura_id: null, preventivo_id: null, note: null,
+    stato: STATO_DEFAULT[input.tipo], fattura_id: null, preventivo_id: null, cliente_id: null, note: null,
     ricorrenza: 'una_tantum', prossimo_rinnovo: null,
     created_at: now, updated_at: now,
   }
@@ -148,6 +151,7 @@ export function buildMovimento(input: MovimentoInput, existing?: Movimento): Mov
     stato: (has('stato') ? input.stato : base.stato) || STATO_DEFAULT[tipo],
     fattura_id: has('fattura_id') ? input.fattura_id ?? null : base.fattura_id,
     preventivo_id: has('preventivo_id') ? input.preventivo_id ?? null : base.preventivo_id,
+    cliente_id: has('cliente_id') ? input.cliente_id ?? null : base.cliente_id,
     note: has('note') ? input.note ?? null : base.note,
     ricorrenza: (has('ricorrenza') ? input.ricorrenza : base.ricorrenza) || 'una_tantum',
     prossimo_rinnovo: has('prossimo_rinnovo') ? input.prossimo_rinnovo ?? null : base.prossimo_rinnovo,
@@ -243,6 +247,92 @@ export async function updateMovimento(db: D1Database, m: Movimento): Promise<voi
 
 export async function deleteMovimentoById(db: D1Database, id: string): Promise<boolean> {
   const res = await db.prepare('DELETE FROM movimenti WHERE id = ?').bind(id).run()
+  return (res.meta?.changes ?? 0) > 0
+}
+
+// ---------- anagrafica clienti ----------
+
+const CLIENTE_COLUMNS = [
+  'id', 'nome', 'email', 'telefono', 'piva_cf', 'indirizzo', 'note', 'created_at', 'updated_at',
+]
+
+export function validateCliente(
+  body: unknown,
+  { partial = false }: { partial?: boolean } = {},
+): { input?: ClienteInput; error?: string } {
+  if (typeof body !== 'object' || body === null) return { error: 'Corpo della richiesta non valido' }
+  const b = body as Record<string, unknown>
+
+  const nome = b.nome === undefined ? undefined : str(b.nome)
+  if (!partial && !nome) return { error: 'Il nome del cliente è obbligatorio' }
+  if (b.nome !== undefined && !nome) return { error: 'Il nome del cliente è obbligatorio' }
+
+  const input: ClienteInput = { nome: nome ?? '' }
+  if (b.email !== undefined) input.email = str(b.email)
+  if (b.telefono !== undefined) input.telefono = str(b.telefono)
+  if (b.piva_cf !== undefined) input.piva_cf = str(b.piva_cf)
+  if (b.indirizzo !== undefined) input.indirizzo = str(b.indirizzo)
+  if (b.note !== undefined) input.note = str(b.note)
+  return { input }
+}
+
+export function buildCliente(input: ClienteInput, existing?: Cliente): Cliente {
+  const now = Date.now()
+  const base: Cliente = existing ?? {
+    id: crypto.randomUUID(),
+    nome: '', email: null, telefono: null, piva_cf: null, indirizzo: null, note: null,
+    created_at: now, updated_at: now,
+  }
+  const has = (k: keyof ClienteInput) => Object.prototype.hasOwnProperty.call(input, k)
+  return {
+    ...base,
+    nome: has('nome') ? input.nome : base.nome,
+    email: has('email') ? input.email ?? null : base.email,
+    telefono: has('telefono') ? input.telefono ?? null : base.telefono,
+    piva_cf: has('piva_cf') ? input.piva_cf ?? null : base.piva_cf,
+    indirizzo: has('indirizzo') ? input.indirizzo ?? null : base.indirizzo,
+    note: has('note') ? input.note ?? null : base.note,
+    updated_at: now,
+  }
+}
+
+export async function listClienti(db: D1Database, q?: string | null): Promise<Cliente[]> {
+  let sql = 'SELECT * FROM clienti'
+  const binds: unknown[] = []
+  if (q) {
+    sql += ' WHERE (nome LIKE ? OR email LIKE ? OR piva_cf LIKE ?)'
+    const like = `%${q}%`
+    binds.push(like, like, like)
+  }
+  sql += ' ORDER BY nome COLLATE NOCASE ASC'
+  const res = await db.prepare(sql).bind(...binds).all<Cliente>()
+  return res.results ?? []
+}
+
+export async function getClienteById(db: D1Database, id: string): Promise<Cliente | null> {
+  return db.prepare('SELECT * FROM clienti WHERE id = ?').bind(id).first<Cliente>()
+}
+
+export async function insertCliente(db: D1Database, c: Cliente): Promise<void> {
+  const placeholders = CLIENTE_COLUMNS.map(() => '?').join(', ')
+  const values = CLIENTE_COLUMNS.map((k) => (c as unknown as Record<string, unknown>)[k])
+  await db
+    .prepare(`INSERT INTO clienti (${CLIENTE_COLUMNS.join(', ')}) VALUES (${placeholders})`)
+    .bind(...values)
+    .run()
+}
+
+export async function updateCliente(db: D1Database, c: Cliente): Promise<void> {
+  const editable = CLIENTE_COLUMNS.filter((k) => k !== 'id' && k !== 'created_at')
+  const setClause = editable.map((k) => `${k} = ?`).join(', ')
+  const values = editable.map((k) => (c as unknown as Record<string, unknown>)[k])
+  await db.prepare(`UPDATE clienti SET ${setClause} WHERE id = ?`).bind(...values, c.id).run()
+}
+
+// Elimina il cliente e scollega i movimenti che vi puntavano (controparte resta come testo).
+export async function deleteClienteById(db: D1Database, id: string): Promise<boolean> {
+  await db.prepare('UPDATE movimenti SET cliente_id = NULL WHERE cliente_id = ?').bind(id).run()
+  const res = await db.prepare('DELETE FROM clienti WHERE id = ?').bind(id).run()
   return (res.meta?.changes ?? 0) > 0
 }
 

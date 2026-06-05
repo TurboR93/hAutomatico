@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS movimenti (
   stato           TEXT,                          -- macchina a stati per tipo (validata server-side)
   fattura_id      TEXT REFERENCES movimenti(id), -- soft FK (legacy, non più usato dai compensi)
   preventivo_id   TEXT REFERENCES movimenti(id), -- soft FK: incasso -> preventivo collegato
+  cliente_id      TEXT REFERENCES clienti(id),   -- soft FK: movimento -> cliente in anagrafica
   note            TEXT,
 
   ricorrenza        TEXT NOT NULL DEFAULT 'una_tantum', -- 'una_tantum'|'mensile'|'annuale'
@@ -50,6 +51,21 @@ CREATE INDEX IF NOT EXISTS idx_movimenti_stato      ON movimenti(tipo, stato);
 CREATE INDEX IF NOT EXISTS idx_movimenti_data       ON movimenti(data);
 CREATE INDEX IF NOT EXISTS idx_movimenti_fattura_id ON movimenti(fattura_id);
 CREATE INDEX IF NOT EXISTS idx_movimenti_preventivo_id ON movimenti(preventivo_id);
+CREATE INDEX IF NOT EXISTS idx_movimenti_cliente_id ON movimenti(cliente_id);
+
+-- Anagrafica clienti. I movimenti vi puntano via movimenti.cliente_id (soft FK).
+CREATE TABLE IF NOT EXISTS clienti (
+  id          TEXT PRIMARY KEY,
+  nome        TEXT NOT NULL,
+  email       TEXT,
+  telefono    TEXT,
+  piva_cf     TEXT,                          -- Partita IVA o Codice Fiscale
+  indirizzo   TEXT,
+  note        TEXT,
+  created_at  INTEGER NOT NULL,              -- epoch ms
+  updated_at  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_clienti_nome ON clienti(nome);
 
 -- Anti brute-force sul login: conteggio tentativi falliti per IP.
 CREATE TABLE IF NOT EXISTS login_attempts (

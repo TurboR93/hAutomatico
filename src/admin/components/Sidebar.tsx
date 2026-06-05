@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   Receipt,
+  Users,
 } from 'lucide-react'
 import { api } from '../api'
 
@@ -16,9 +17,10 @@ interface SidebarProps {
 const links = [
   { to: '/', label: 'Panoramica', icon: LayoutDashboard, end: true },
   { to: '/movimenti', label: 'Movimenti', icon: ArrowLeftRight, end: false },
-  { to: '/fatture', label: 'Fatture', icon: FileText, end: false },
+  { to: '/clienti', label: 'Clienti', icon: Users, end: false },
   { to: '/preventivi', label: 'Preventivi', icon: FileSignature, end: false },
   { to: '/ritenute', label: "Ritenute d'acconto", icon: Receipt, end: false },
+  { to: '/fatture', label: 'Fatture', icon: FileText, end: false },
 ]
 
 const Sidebar = ({ onNavigate }: SidebarProps) => {

@@ -7,6 +7,7 @@ import { computeAmounts, grossUpToImponibile } from '../money'
 import { centsToInput, euroToCents, formatEuro, formatFileSize, oggiISO } from '../format'
 import {
   Allegato,
+  Cliente,
   isEntrata,
   Movimento,
   MovimentoInput,
@@ -18,6 +19,7 @@ import {
   TIPO_LABEL,
   TipoMovimento,
 } from '../types'
+import ClienteFormModal from './ClienteFormModal'
 
 interface RecordFormModalProps {
   open: boolean
@@ -25,6 +27,8 @@ interface RecordFormModalProps {
   defaultTipo?: TipoMovimento
   lockTipo?: boolean
   tipiOptions?: TipoMovimento[]
+  // Valori iniziali per un nuovo movimento (es. registrazione incasso da preventivo).
+  prefill?: Partial<Movimento> | null
   onClose: () => void
   onSaved: (record: Movimento) => void
 }
@@ -44,6 +48,7 @@ interface FormState {
   stato: string
   fattura_id: string
   preventivo_id: string
+  cliente_id: string
   note: string
   ricorrenza: string
   prossimo_rinnovo: string
@@ -69,6 +74,7 @@ function defaultForm(tipo: TipoMovimento): FormState {
     stato: tipo === 'ritenuta' ? 'incassato' : STATI_PER_TIPO[tipo][0],
     fattura_id: '',
     preventivo_id: '',
+    cliente_id: '',
     note: '',
     ricorrenza: 'una_tantum',
     prossimo_rinnovo: '',
@@ -91,9 +97,24 @@ function formFromMovimento(m: Movimento): FormState {
     stato: m.stato || STATI_PER_TIPO[m.tipo][0],
     fattura_id: m.fattura_id || '',
     preventivo_id: m.preventivo_id || '',
+    cliente_id: m.cliente_id || '',
     note: m.note || '',
     ricorrenza: m.ricorrenza || 'una_tantum',
     prossimo_rinnovo: m.prossimo_rinnovo || '',
+  }
+}
+
+// Applica valori iniziali (es. da preventivo) sopra il form di default di un nuovo record.
+function applyPrefill(base: FormState, p: Partial<Movimento>): FormState {
+  return {
+    ...base,
+    tipo: p.tipo ?? base.tipo,
+    controparte: p.controparte ?? base.controparte,
+    cliente_id: p.cliente_id ?? base.cliente_id,
+    descrizione: p.descrizione ?? base.descrizione,
+    preventivo_id: p.preventivo_id ?? base.preventivo_id,
+    imponibile: p.imponibile_cents != null ? centsToInput(p.imponibile_cents) : base.imponibile,
+    stato: p.stato ?? base.stato,
   }
 }
 
@@ -111,6 +132,7 @@ const RecordFormModal = ({
   defaultTipo = 'fattura_emessa',
   lockTipo = false,
   tipiOptions = TIPI,
+  prefill,
   onClose,
   onSaved,
 }: RecordFormModalProps) => {
@@ -121,6 +143,8 @@ const RecordFormModal = ({
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [importoNetto, setImportoNetto] = useState(false)
   const [preventivi, setPreventivi] = useState<Movimento[]>([])
+  const [clienti, setClienti] = useState<Cliente[]>([])
+  const [clienteModalOpen, setClienteModalOpen] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -129,20 +153,28 @@ const RecordFormModal = ({
     setAllegati([])
     // Nuovo compenso (ritenuta d'acconto): si parte dal netto del bonifico, la
     // ritenuta si aggiunge sopra. In modifica si mostra invece il lordo già salvato.
-    setImportoNetto(!initial && defaultTipo === 'ritenuta')
-    setForm(initial ? formFromMovimento(initial) : defaultForm(defaultTipo))
-    // Preventivi disponibili per il collegamento di un incasso.
+    const seedTipo = (!initial && prefill?.tipo) || defaultTipo
+    setImportoNetto(!initial && seedTipo === 'ritenuta')
+    const base = initial ? formFromMovimento(initial) : defaultForm(defaultTipo)
+    setForm(!initial && prefill ? applyPrefill(base, prefill) : base)
+    setClienteModalOpen(false)
+    // Preventivi e clienti disponibili per i collegamenti.
     api
       .listRecords({ gruppo: 'preventivi' })
       .then(setPreventivi)
       .catch(() => setPreventivi([]))
+    api
+      .listClienti()
+      .then(setClienti)
+      .catch(() => setClienti([]))
     if (initial) {
       api
         .listAllegati(initial.id)
         .then(setAllegati)
         .catch(() => setAllegati([]))
     }
-  }, [open, initial, defaultTipo])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initial, defaultTipo, prefill])
 
   const addFiles = (files: FileList | null) => {
     if (!files) return
@@ -168,6 +200,22 @@ const RecordFormModal = ({
     setImportoNetto(tipo === 'ritenuta')
   }
 
+  // Selezione cliente: '__new__' apre la creazione rapida; altrimenti collega e
+  // copia il nome nella controparte (denormalizzato, così liste/export restano semplici).
+  const selectCliente = (id: string) => {
+    if (id === '__new__') {
+      setClienteModalOpen(true)
+      return
+    }
+    const c = clienti.find((x) => x.id === id)
+    set({ cliente_id: id, controparte: c ? c.nome : '' })
+  }
+  const onClienteCreated = (c: Cliente) => {
+    setClienti((prev) => [...prev, c].sort((a, b) => a.nome.localeCompare(b.nome)))
+    set({ cliente_id: c.id, controparte: c.nome })
+    setClienteModalOpen(false)
+  }
+
   const isPagamento = form.tipo === 'pagamento'
   // Compenso da prestazione occasionale (privato senza P.IVA): solo ritenuta d'acconto,
   // niente cassa né IVA.
@@ -178,6 +226,9 @@ const RecordFormModal = ({
   const showFiscal = !isSimple
   const showCassaIva = showFiscal && !isCompenso
   const showScadenza = form.tipo === 'fattura_emessa' || form.tipo === 'fattura_ricevuta'
+  // La fattura ricevuta è verso un fornitore (testo libero); tutto il resto è verso un cliente.
+  const isFornitore = form.tipo === 'fattura_ricevuta'
+  const clientFacing = !isFornitore
   // Un incasso (pagamento, compenso, fattura emessa) può essere collegato a un preventivo.
   const canLinkPreventivo = isEntrata(form.tipo)
   const importoLabel = isCompenso
@@ -229,6 +280,7 @@ const RecordFormModal = ({
       stato: form.stato,
       fattura_id: null,
       preventivo_id: canLinkPreventivo ? form.preventivo_id || null : null,
+      cliente_id: clientFacing ? form.cliente_id || null : null,
       note: form.note,
       ricorrenza: form.ricorrenza,
       prossimo_rinnovo: form.ricorrenza !== 'una_tantum' ? form.prossimo_rinnovo || null : null,
@@ -295,13 +347,36 @@ const RecordFormModal = ({
                 )}
 
                 <Field label={controparteLabel}>
-                  <input
-                    type="text"
-                    value={form.controparte}
-                    onChange={(e) => set({ controparte: e.target.value })}
-                    className={inputCls}
-                    placeholder="Nome cliente o fornitore"
-                  />
+                  {clientFacing ? (
+                    <>
+                      <select
+                        value={form.cliente_id}
+                        onChange={(e) => selectCliente(e.target.value)}
+                        className={inputCls}
+                      >
+                        <option value="">— nessun cliente —</option>
+                        {clienti.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nome}
+                          </option>
+                        ))}
+                        <option value="__new__">➕ Nuovo cliente…</option>
+                      </select>
+                      {!form.cliente_id && form.controparte && (
+                        <span className="mt-1 block text-xs text-amber-600">
+                          Attuale: {form.controparte} — non collegato all'anagrafica
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={form.controparte}
+                      onChange={(e) => set({ controparte: e.target.value })}
+                      className={inputCls}
+                      placeholder="Nome fornitore"
+                    />
+                  )}
                 </Field>
 
                 <Field label="Stato">
@@ -616,6 +691,13 @@ const RecordFormModal = ({
                 {saving ? 'Salvataggio…' : 'Salva'}
               </button>
             </div>
+
+            <ClienteFormModal
+              open={clienteModalOpen}
+              nested
+              onClose={() => setClienteModalOpen(false)}
+              onSaved={onClienteCreated}
+            />
           </motion.div>
         </motion.div>
       )}

@@ -94,6 +94,7 @@ export interface Movimento {
   stato: string | null
   fattura_id: string | null
   preventivo_id: string | null
+  cliente_id: string | null
   note: string | null
   ricorrenza: string
   prossimo_rinnovo: string | null
@@ -120,9 +121,31 @@ export interface MovimentoInput {
   stato?: string | null
   fattura_id?: string | null
   preventivo_id?: string | null
+  cliente_id?: string | null
   note?: string | null
   ricorrenza?: string | null
   prossimo_rinnovo?: string | null
+}
+
+export interface Cliente {
+  id: string
+  nome: string
+  email: string | null
+  telefono: string | null
+  piva_cf: string | null
+  indirizzo: string | null
+  note: string | null
+  created_at: number
+  updated_at: number
+}
+
+export interface ClienteInput {
+  nome: string
+  email?: string | null
+  telefono?: string | null
+  piva_cf?: string | null
+  indirizzo?: string | null
+  note?: string | null
 }
 
 export interface Allegato {
