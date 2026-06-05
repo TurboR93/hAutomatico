@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Paperclip, Pencil, Plus, Repeat, Trash2 } from 'lucide-react'
 import { api, RecordFilters } from '../api'
 import { isAuthError, messageOf, useFetch } from '../useFetch'
@@ -21,7 +21,6 @@ interface RecordsManagerProps {
   showTipoColumn?: boolean
   showFilters?: boolean
   filterShowTipo?: boolean
-  loadFattureForLink?: boolean
   gruppo?: 'movimenti' | 'preventivi'
   tipiOptions?: TipoMovimento[]
 }
@@ -36,7 +35,6 @@ const RecordsManager = ({
   showTipoColumn = false,
   showFilters = true,
   filterShowTipo = true,
-  loadFattureForLink = false,
   gruppo,
   tipiOptions,
 }: RecordsManagerProps) => {
@@ -44,7 +42,6 @@ const RecordsManager = ({
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Movimento | null>(null)
   const [toDelete, setToDelete] = useState<Movimento | null>(null)
-  const [fatture, setFatture] = useState<Movimento[]>([])
   const [actionError, setActionError] = useState<string | null>(null)
 
   const query: RecordFilters = useMemo(
@@ -62,14 +59,6 @@ const RecordsManager = ({
   )
 
   const { data, loading, error, reload } = useFetch<Movimento[]>(() => api.listRecords(query), [query])
-
-  useEffect(() => {
-    if (!loadFattureForLink) return
-    api
-      .listRecords({ tipo: 'fattura_emessa' })
-      .then(setFatture)
-      .catch(() => setFatture([]))
-  }, [loadFattureForLink])
 
   const records = data || []
 
@@ -225,7 +214,6 @@ const RecordsManager = ({
         defaultTipo={defaultTipo}
         lockTipo={lockTipo}
         tipiOptions={tipiOptions}
-        fatture={fatture}
         onClose={() => setModalOpen(false)}
         onSaved={() => {
           setModalOpen(false)

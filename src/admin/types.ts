@@ -20,9 +20,13 @@ export const TIPO_LABEL: Record<TipoMovimento, string> = {
   pagamento: 'Pagamento ricevuto',
   fattura_emessa: 'Fattura emessa',
   fattura_ricevuta: 'Fattura ricevuta',
-  ritenuta: "Ritenuta d'acconto",
+  ritenuta: "Compenso (ritenuta d'acconto)",
   preventivo: 'Preventivo',
 }
+
+// Soglia annua dei compensi da prestazione occasionale (lordo), in centesimi.
+// Da privato senza P.IVA: 5.000 € lordi/anno = 4.000 netti + 1.000 di ritenuta.
+export const SOGLIA_COMPENSI_CENTS = 500000
 
 // I movimenti contabili veri (il preventivo è pipeline, vive in un contesto separato).
 export const MOVIMENTO_TIPI: TipoMovimento[] = [
@@ -36,16 +40,20 @@ export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
   pagamento: ['incassato'],
   fattura_emessa: ['da_fare', 'emessa', 'pagata'],
   fattura_ricevuta: ['da_pagare', 'pagata'],
-  ritenuta: ['da_versare', 'versata'],
+  // Compenso occasionale: lo incassi (la ritenuta la versa il committente, non tu).
+  ritenuta: ['da_incassare', 'incassato'],
   preventivo: ['firmato', 'in_corso', 'completato', 'fatturato'],
 }
 
 export const STATO_LABEL: Record<string, string> = {
   incassato: 'Incassato',
+  da_incassare: 'Da incassare',
   da_fare: 'Da fare',
   emessa: 'Emessa',
   pagata: 'Pagata',
   da_pagare: 'Da pagare',
+  // legacy (vecchie ritenute "da versare/versata", ora compensi): mantenuti per non
+  // rompere la visualizzazione di righe storiche prima della migrazione.
   da_versare: 'Da versare',
   versata: 'Versata',
   firmato: 'Firmato',
@@ -129,10 +137,15 @@ export interface Kpi {
   spesePagate: number
   speseDaPagare: number
   saldo: number
-  ritenuteSubite: number
   pipelinePreventivi: number
   entrateRicorrentiAnnue: number
   usciteRicorrentiAnnue: number
+  // Prestazione occasionale (anno solare corrente).
+  annoFiscale: number
+  sogliaCompensi: number // soglia annua lordo (centesimi)
+  compensiLordiAnno: number // lordo dei compensi con ritenuta nell'anno
+  compensiNettiAnno: number // netto effettivamente incassato
+  ritenuteAnno: number // ritenuta d'acconto trattenuta (acconto IRPEF)
 }
 
 export interface ProssimoRinnovo {
@@ -151,7 +164,7 @@ export interface Conteggi {
   fattureEmesse: number
   fattureDaPagare: number
   preventiviAperti: number
-  ritenuteDaVersare: number
+  compensiDaIncassare: number
 }
 
 export interface PuntoMensile {
@@ -168,5 +181,5 @@ export interface Summary {
 }
 
 export function isEntrata(tipo: TipoMovimento): boolean {
-  return tipo === 'pagamento' || tipo === 'fattura_emessa'
+  return tipo === 'pagamento' || tipo === 'fattura_emessa' || tipo === 'ritenuta'
 }

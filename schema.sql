@@ -12,6 +12,8 @@
 CREATE TABLE IF NOT EXISTS movimenti (
   id              TEXT PRIMARY KEY,              -- crypto.randomUUID()
   tipo            TEXT NOT NULL,                 -- 'pagamento'|'fattura_emessa'|'fattura_ricevuta'|'ritenuta'|'preventivo'
+                                                 -- 'ritenuta' = compenso da prestazione occasionale (privato senza P.IVA):
+                                                 --  imponibile=lordo, ritenuta=20% (la versa il committente), netto=bonifico incassato
   controparte     TEXT,                          -- cliente o fornitore
   descrizione     TEXT,
   numero          TEXT,                          -- numero fattura/preventivo (opzionale)
@@ -32,7 +34,7 @@ CREATE TABLE IF NOT EXISTS movimenti (
   netto_cents           INTEGER NOT NULL DEFAULT 0,  -- totale - ritenuta (Netto a pagare/incassare)
 
   stato           TEXT,                          -- macchina a stati per tipo (validata server-side)
-  fattura_id      TEXT REFERENCES movimenti(id), -- soft FK: ritenuta -> fattura collegata
+  fattura_id      TEXT REFERENCES movimenti(id), -- soft FK (legacy, non più usato dai compensi)
   note            TEXT,
 
   ricorrenza        TEXT NOT NULL DEFAULT 'una_tantum', -- 'una_tantum'|'mensile'|'annuale'

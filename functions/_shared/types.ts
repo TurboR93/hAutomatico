@@ -41,7 +41,8 @@ export const STATI_PER_TIPO: Record<TipoMovimento, string[]> = {
   pagamento: ['incassato'],
   fattura_emessa: ['da_fare', 'emessa', 'pagata'],
   fattura_ricevuta: ['da_pagare', 'pagata'],
-  ritenuta: ['da_versare', 'versata'],
+  // Compenso occasionale: lo incassi (la ritenuta la versa il committente, non tu).
+  ritenuta: ['da_incassare', 'incassato'],
   preventivo: ['firmato', 'in_corso', 'completato', 'fatturato'],
 }
 

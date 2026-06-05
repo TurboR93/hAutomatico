@@ -3,17 +3,24 @@ import { Env } from '../_shared/types'
 
 // GET /api/summary -> KPI della panoramica + serie mensile incassi/spese.
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+  // Anno solare corrente: per i compensi occasionali conta la competenza dell'anno
+  // (data incasso se presente, altrimenti data documento).
+  const annoCompenso = "strftime('%Y', COALESCE(data_pagamento, data)) = strftime('%Y','now')"
   const kpiSql = `
     SELECT
+      CAST(strftime('%Y','now') AS INTEGER) AS annoFiscale,
       COALESCE(SUM(CASE WHEN tipo='fattura_emessa' THEN imponibile_cents ELSE 0 END), 0) AS fatturato,
-      COALESCE(SUM(CASE WHEN tipo='pagamento' OR (tipo='fattura_emessa' AND stato='pagata') THEN netto_cents ELSE 0 END), 0) AS incassato,
-      COALESCE(SUM(CASE WHEN tipo='fattura_emessa' AND stato<>'pagata' THEN netto_cents ELSE 0 END), 0) AS daIncassare,
+      COALESCE(SUM(CASE WHEN tipo='pagamento'
+                          OR (tipo='fattura_emessa' AND stato='pagata')
+                          OR (tipo='ritenuta' AND stato='incassato') THEN netto_cents ELSE 0 END), 0) AS incassato,
+      COALESCE(SUM(CASE WHEN (tipo='fattura_emessa' AND stato<>'pagata')
+                          OR (tipo='ritenuta' AND stato='da_incassare') THEN netto_cents ELSE 0 END), 0) AS daIncassare,
       COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' THEN totale_cents ELSE 0 END), 0) AS spese,
       COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND stato='pagata' THEN totale_cents ELSE 0 END), 0) AS spesePagate,
       COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND stato<>'pagata' THEN totale_cents ELSE 0 END), 0) AS speseDaPagare,
-      COALESCE(SUM(CASE WHEN tipo='fattura_emessa' THEN ritenuta_cents
-                        WHEN tipo='ritenuta' AND fattura_id IS NULL THEN ritenuta_cents
-                        ELSE 0 END), 0) AS ritenuteSubite,
+      COALESCE(SUM(CASE WHEN tipo='ritenuta' AND ${annoCompenso} THEN imponibile_cents ELSE 0 END), 0) AS compensiLordiAnno,
+      COALESCE(SUM(CASE WHEN tipo='ritenuta' AND ${annoCompenso} THEN netto_cents ELSE 0 END), 0) AS compensiNettiAnno,
+      COALESCE(SUM(CASE WHEN tipo='ritenuta' AND ${annoCompenso} THEN ritenuta_cents ELSE 0 END), 0) AS ritenuteAnno,
       COALESCE(SUM(CASE WHEN tipo='preventivo' AND stato IN ('firmato','in_corso') THEN imponibile_cents ELSE 0 END), 0) AS pipelinePreventivi,
       COALESCE(SUM(CASE WHEN tipo='fattura_emessa' AND ricorrenza='mensile' THEN imponibile_cents*12
                         WHEN tipo='fattura_emessa' AND ricorrenza='annuale' THEN imponibile_cents
@@ -29,13 +36,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       COALESCE(SUM(CASE WHEN tipo='fattura_emessa' AND stato='emessa' THEN 1 ELSE 0 END), 0) AS fattureEmesse,
       COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND stato='da_pagare' THEN 1 ELSE 0 END), 0) AS fattureDaPagare,
       COALESCE(SUM(CASE WHEN tipo='preventivo' AND stato IN ('firmato','in_corso') THEN 1 ELSE 0 END), 0) AS preventiviAperti,
-      COALESCE(SUM(CASE WHEN tipo='ritenuta' AND stato='da_versare' THEN 1 ELSE 0 END), 0) AS ritenuteDaVersare
+      COALESCE(SUM(CASE WHEN tipo='ritenuta' AND stato='da_incassare' THEN 1 ELSE 0 END), 0) AS compensiDaIncassare
     FROM movimenti
   `
   const serieSql = `
     SELECT
       substr(COALESCE(data_pagamento, data), 1, 7) AS mese,
-      COALESCE(SUM(CASE WHEN tipo='pagamento' OR (tipo='fattura_emessa' AND stato='pagata') THEN netto_cents ELSE 0 END), 0) AS incassi,
+      COALESCE(SUM(CASE WHEN tipo='pagamento'
+                          OR (tipo='fattura_emessa' AND stato='pagata')
+                          OR (tipo='ritenuta' AND stato='incassato') THEN netto_cents ELSE 0 END), 0) AS incassi,
       COALESCE(SUM(CASE WHEN tipo='fattura_ricevuta' AND stato='pagata' THEN totale_cents ELSE 0 END), 0) AS spese
     FROM movimenti
     WHERE COALESCE(data_pagamento, data) IS NOT NULL
@@ -71,10 +80,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       spesePagate,
       speseDaPagare: kpi?.speseDaPagare ?? 0,
       saldo: incassato - spesePagate,
-      ritenuteSubite: kpi?.ritenuteSubite ?? 0,
       pipelinePreventivi: kpi?.pipelinePreventivi ?? 0,
       entrateRicorrentiAnnue: kpi?.entrateRicorrentiAnnue ?? 0,
       usciteRicorrentiAnnue: kpi?.usciteRicorrentiAnnue ?? 0,
+      annoFiscale: kpi?.annoFiscale ?? new Date().getUTCFullYear(),
+      sogliaCompensi: 500000,
+      compensiLordiAnno: kpi?.compensiLordiAnno ?? 0,
+      compensiNettiAnno: kpi?.compensiNettiAnno ?? 0,
+      ritenuteAnno: kpi?.ritenuteAnno ?? 0,
     },
     conteggi: counts ?? {},
     serieMensile: serie?.results ?? [],

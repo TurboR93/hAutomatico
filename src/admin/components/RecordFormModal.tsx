@@ -24,7 +24,6 @@ interface RecordFormModalProps {
   defaultTipo?: TipoMovimento
   lockTipo?: boolean
   tipiOptions?: TipoMovimento[]
-  fatture?: Movimento[]
   onClose: () => void
   onSaved: (record: Movimento) => void
 }
@@ -64,7 +63,8 @@ function defaultForm(tipo: TipoMovimento): FormState {
     cassa_percentuale: '',
     iva_percentuale: tipo === 'fattura_emessa' || tipo === 'fattura_ricevuta' || tipo === 'preventivo' ? '22' : '',
     ritenuta_percentuale: tipo === 'ritenuta' ? '20' : '',
-    stato: STATI_PER_TIPO[tipo][0],
+    // Il compenso si registra di norma a bonifico ricevuto: default "incassato".
+    stato: tipo === 'ritenuta' ? 'incassato' : STATI_PER_TIPO[tipo][0],
     fattura_id: '',
     note: '',
     ricorrenza: 'una_tantum',
@@ -107,7 +107,6 @@ const RecordFormModal = ({
   defaultTipo = 'fattura_emessa',
   lockTipo = false,
   tipiOptions = TIPI,
-  fatture = [],
   onClose,
   onSaved,
 }: RecordFormModalProps) => {
@@ -123,7 +122,9 @@ const RecordFormModal = ({
     setError(null)
     setPendingFiles([])
     setAllegati([])
-    setImportoNetto(false)
+    // Nuovo compenso (ritenuta d'acconto): si parte dal netto del bonifico, la
+    // ritenuta si aggiunge sopra. In modifica si mostra invece il lordo già salvato.
+    setImportoNetto(!initial && defaultTipo === 'ritenuta')
     setForm(initial ? formFromMovimento(initial) : defaultForm(defaultTipo))
     if (initial) {
       api
@@ -152,19 +153,30 @@ const RecordFormModal = ({
 
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }))
 
-  const changeTipo = (tipo: TipoMovimento) =>
-    set({ tipo, stato: STATI_PER_TIPO[tipo][0] })
+  const changeTipo = (tipo: TipoMovimento) => {
+    set({ tipo, stato: tipo === 'ritenuta' ? 'incassato' : STATI_PER_TIPO[tipo][0] })
+    setImportoNetto(tipo === 'ritenuta')
+  }
 
   const isPagamento = form.tipo === 'pagamento'
+  // Compenso da prestazione occasionale (privato senza P.IVA): solo ritenuta d'acconto,
+  // niente cassa né IVA.
+  const isCompenso = form.tipo === 'ritenuta'
   const showFiscal = !isPagamento
+  const showCassaIva = showFiscal && !isCompenso
   const showScadenza = form.tipo === 'fattura_emessa' || form.tipo === 'fattura_ricevuta'
-  const showFatturaLink = form.tipo === 'ritenuta'
-  const importoLabel = isPagamento ? 'Importo' : 'Imponibile (compenso)'
+  const importoLabel = isCompenso
+    ? importoNetto
+      ? 'Netto incassato (bonifico)'
+      : 'Compenso lordo'
+    : isPagamento
+      ? 'Importo'
+      : 'Imponibile (compenso)'
   const controparteLabel = form.tipo === 'fattura_ricevuta' ? 'Fornitore' : 'Cliente'
   const dataLabel = form.tipo === 'preventivo' ? 'Data firma' : 'Data documento'
 
-  const cassaP = showFiscal ? Number(form.cassa_percentuale) || 0 : 0
-  const ivaP = showFiscal ? Number(form.iva_percentuale) || 0 : 0
+  const cassaP = showCassaIva ? Number(form.cassa_percentuale) || 0 : 0
+  const ivaP = showCassaIva ? Number(form.iva_percentuale) || 0 : 0
   const ritP = showFiscal ? Number(form.ritenuta_percentuale) || 0 : 0
   const importoCents = euroToCents(form.imponibile)
   // Se l'importo inserito è il netto, ricava il compenso lordo (imponibile).
@@ -194,7 +206,7 @@ const RecordFormModal = ({
       iva_percentuale: ivaP,
       ritenuta_percentuale: ritP,
       stato: form.stato,
-      fattura_id: showFatturaLink ? form.fattura_id || null : null,
+      fattura_id: null,
       note: form.note,
       ricorrenza: form.ricorrenza,
       prossimo_rinnovo: form.ricorrenza !== 'una_tantum' ? form.prossimo_rinnovo || null : null,
@@ -341,22 +353,6 @@ const RecordFormModal = ({
                   </Field>
                 )}
 
-                {showFatturaLink && (
-                  <Field label="Fattura collegata">
-                    <select
-                      value={form.fattura_id}
-                      onChange={(e) => set({ fattura_id: e.target.value })}
-                      className={inputCls}
-                    >
-                      <option value="">— nessuna —</option>
-                      {fatture.map((f) => (
-                        <option key={f.id} value={f.id}>
-                          {(f.numero || 's.n.') + ' · ' + (f.controparte || '—')}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                )}
               </div>
 
               <Field label="Descrizione">
@@ -381,7 +377,7 @@ const RecordFormModal = ({
                     placeholder="0,00"
                   />
                 </Field>
-                {showFiscal && (
+                {showCassaIva && (
                   <>
                     <Field label="Cassa %" hint="Contributo prev.">
                       <input
@@ -405,18 +401,20 @@ const RecordFormModal = ({
                         placeholder="22"
                       />
                     </Field>
-                    <Field label="Ritenuta %">
-                      <input
-                        type="number"
-                        step="any"
-                        min="0"
-                        value={form.ritenuta_percentuale}
-                        onChange={(e) => set({ ritenuta_percentuale: e.target.value })}
-                        className={inputCls}
-                        placeholder="0"
-                      />
-                    </Field>
                   </>
+                )}
+                {showFiscal && (
+                  <Field label="Ritenuta %" hint={isCompenso ? "20% prest. occasionale" : undefined}>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={form.ritenuta_percentuale}
+                      onChange={(e) => set({ ritenuta_percentuale: e.target.value })}
+                      className={inputCls}
+                      placeholder={isCompenso ? '20' : '0'}
+                    />
+                  </Field>
                 )}
               </div>
 
@@ -446,8 +444,12 @@ const RecordFormModal = ({
                         <span className="text-right font-medium sm:col-span-2">{formatEuro(preview.cassa_cents)}</span>
                       </>
                     )}
-                    <span className="text-black/50">IVA</span>
-                    <span className="text-right font-medium sm:col-span-2">{formatEuro(preview.iva_cents)}</span>
+                    {(showCassaIva || preview.iva_cents > 0) && (
+                      <>
+                        <span className="text-black/50">IVA</span>
+                        <span className="text-right font-medium sm:col-span-2">{formatEuro(preview.iva_cents)}</span>
+                      </>
+                    )}
                     {preview.ritenuta_cents > 0 && (
                       <>
                         <span className="text-[#D03F29]">Ritenuta d'acconto</span>
@@ -456,11 +458,15 @@ const RecordFormModal = ({
                         </span>
                       </>
                     )}
-                    <span className="mt-1 border-t border-black/10 pt-1 font-bold">Totale documento</span>
+                    <span className="mt-1 border-t border-black/10 pt-1 font-bold">
+                      {isCompenso ? 'Compenso lordo' : 'Totale documento'}
+                    </span>
                     <span className="mt-1 border-t border-black/10 pt-1 text-right font-bold sm:col-span-2">
                       {formatEuro(preview.totale_cents)}
                     </span>
-                    <span className="font-black text-emerald-700">Netto a pagare</span>
+                    <span className="font-black text-emerald-700">
+                      {isCompenso ? 'Netto incassato' : 'Netto a pagare'}
+                    </span>
                     <span className="text-right font-black text-emerald-700 sm:col-span-2">
                       {formatEuro(preview.netto_cents)}
                     </span>

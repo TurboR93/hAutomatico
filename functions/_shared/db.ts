@@ -30,7 +30,8 @@ const STATO_DEFAULT: Record<TipoMovimento, string> = {
   pagamento: 'incassato',
   fattura_emessa: 'da_fare',
   fattura_ricevuta: 'da_pagare',
-  ritenuta: 'da_versare',
+  // Il compenso si registra di norma dopo aver ricevuto il bonifico: default "incassato".
+  ritenuta: 'incassato',
   preventivo: 'firmato',
 }
 

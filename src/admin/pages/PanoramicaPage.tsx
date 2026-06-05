@@ -12,8 +12,9 @@ import {
 import { api } from '../api'
 import { useFetch } from '../useFetch'
 import { formatData, formatEuro } from '../format'
-import { Movimento, RICORRENZA_LABEL, STATO_LABEL, Summary, TIPO_LABEL } from '../types'
+import { Movimento, RICORRENZA_LABEL, Summary, TIPO_LABEL } from '../types'
 import KpiCard from '../components/KpiCard'
+import SogliaOccasionale from '../components/SogliaOccasionale'
 import MonthlyChart from '../components/MonthlyChart'
 import DataTable, { Column } from '../components/DataTable'
 import StatoBadge from '../components/StatoBadge'
@@ -63,12 +64,16 @@ const PanoramicaPage = () => {
         </div>
       </div>
 
+      <div className="mb-6">
+        <SogliaOccasionale kpi={kpi} />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard label="Saldo" value={formatEuro(kpi.saldo)} sub="Incassato − spese pagate" icon={Wallet} accent={saldoAccent} delay={0} />
         <KpiCard label="Incassato" value={formatEuro(kpi.incassato)} sub="Netto realmente incassato" icon={TrendingUp} accent="green" delay={0.05} />
-        <KpiCard label="Da incassare" value={formatEuro(kpi.daIncassare)} sub={`${conteggi.fattureEmesse} fatture emesse · ${conteggi.fattureDaFare} da fare`} icon={Clock} accent="yellow" delay={0.1} />
+        <KpiCard label="Da incassare" value={formatEuro(kpi.daIncassare)} sub={`${conteggi.compensiDaIncassare} compensi · ${conteggi.fattureEmesse} fatture emesse`} icon={Clock} accent="yellow" delay={0.1} />
         <KpiCard label="Spese pagate" value={formatEuro(kpi.spesePagate)} sub={`Da pagare: ${formatEuro(kpi.speseDaPagare)}`} icon={TrendingDown} accent="red" delay={0.15} />
-        <KpiCard label="Ritenute d'acconto" value={formatEuro(kpi.ritenuteSubite)} sub="Credito / acconto IRPEF subìto" icon={Receipt} accent="plain" delay={0.2} />
+        <KpiCard label="Ritenuta d'acconto" value={formatEuro(kpi.ritenuteAnno)} sub={`Acconto IRPEF trattenuto dai committenti · ${kpi.annoFiscale}`} icon={Receipt} accent="plain" delay={0.2} />
         <KpiCard label="Preventivi in corso" value={formatEuro(kpi.pipelinePreventivi)} sub={`${conteggi.preventiviAperti} preventivi aperti`} icon={FileSignature} accent="dark" delay={0.25} />
         <KpiCard label="Ricavi ricorrenti / anno" value={formatEuro(kpi.entrateRicorrentiAnnue)} sub="Canoni e rinnovi attivi" icon={Repeat} accent="green" delay={0.3} />
         <KpiCard label="Costi ricorrenti / anno" value={formatEuro(kpi.usciteRicorrentiAnnue)} sub="Abbonamenti e servizi" icon={Repeat} accent="plain" delay={0.35} />
@@ -112,8 +117,8 @@ const PanoramicaPage = () => {
       </div>
 
       <p className="mt-6 text-xs text-black/40">
-        Fatturato totale (imponibile): {formatEuro(kpi.fatturato)} · {STATO_LABEL.da_versare} ritenute:{' '}
-        {conteggi.ritenuteDaVersare}
+        Compensi netti incassati {kpi.annoFiscale}: {formatEuro(kpi.compensiNettiAnno)} · Da incassare:{' '}
+        {conteggi.compensiDaIncassare}
       </p>
     </div>
   )

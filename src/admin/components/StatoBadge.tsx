@@ -11,6 +11,7 @@ const COLORS: Record<string, string> = {
   emessa: 'bg-amber-100 text-amber-800',
   da_fare: 'bg-amber-100 text-amber-800',
   da_pagare: 'bg-amber-100 text-amber-800',
+  da_incassare: 'bg-amber-100 text-amber-800',
   da_versare: 'bg-amber-100 text-amber-800',
   firmato: 'bg-sky-100 text-sky-800',
   in_corso: 'bg-sky-100 text-sky-800',
