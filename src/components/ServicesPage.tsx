@@ -2,8 +2,26 @@ import Header from './Header'
 import Footer from './Footer'
 import Services from './Services'
 import { GeometricField, RevealText, Reveal, AccentLine, PALETTE } from './motion'
+import { useSeo } from '../hooks/useSeo'
+import { services } from '../data/services'
 
 const ServicesPage = () => {
+  useSeo({
+    title: 'Servizi — Software gestionali e automazione | hAutomatico',
+    description:
+      'Gestionali, e-commerce, gestione turni, noleggio, ristorazione, sicurezza cantiere e siti web: soluzioni di automazione e AI su misura per la tua azienda.',
+    path: '/servizi',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: services.map((s, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `https://www.hautomatico.com/servizi/${s.id}`,
+        name: s.title,
+      })),
+    },
+  })
   return (
     <div className="min-h-screen">
       <Header />

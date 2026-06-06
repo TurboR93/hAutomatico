@@ -5,10 +5,65 @@ import { services } from '../data/services'
 import Header from './Header'
 import Footer from './Footer'
 import { GeometricField, RevealText, Reveal, MagneticButton, AccentLine, PALETTE } from './motion'
+import { useSeo } from '../hooks/useSeo'
+
+const SITE = 'https://www.hautomatico.com'
 
 const ServiceDetail = () => {
     const { serviceId } = useParams<{ serviceId: string }>()
     const service = services.find((s) => s.id === serviceId)
+
+    const priceNumber = service
+        ? Number(service.price.replace(/[^\d,]/g, '').replace(/\./g, '').replace(',', '.'))
+        : 0
+    const serviceUrl = `${SITE}/servizi/${service?.id ?? ''}`
+
+    useSeo(
+        service
+            ? {
+                  title: `${service.title} — hAutomatico`,
+                  description: service.shortDescription,
+                  path: `/servizi/${service.id}`,
+                  image: service.image,
+                  jsonLd: [
+                      {
+                          '@context': 'https://schema.org',
+                          '@type': 'Service',
+                          name: service.title,
+                          description: service.shortDescription,
+                          url: serviceUrl,
+                          image: `${SITE}${service.image}`,
+                          areaServed: 'IT',
+                          provider: {
+                              '@type': 'Organization',
+                              name: 'hAutomatico',
+                              url: `${SITE}/`,
+                          },
+                          offers: {
+                              '@type': 'Offer',
+                              price: priceNumber,
+                              priceCurrency: 'EUR',
+                              availability: 'https://schema.org/InStock',
+                              url: serviceUrl,
+                          },
+                      },
+                      {
+                          '@context': 'https://schema.org',
+                          '@type': 'BreadcrumbList',
+                          itemListElement: [
+                              { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+                              { '@type': 'ListItem', position: 2, name: 'Servizi', item: `${SITE}/servizi` },
+                              { '@type': 'ListItem', position: 3, name: service.title, item: serviceUrl },
+                          ],
+                      },
+                  ],
+              }
+            : {
+                  title: 'Servizio non trovato — hAutomatico',
+                  description: 'La pagina del servizio richiesto non è disponibile.',
+                  path: `/servizi/${serviceId ?? ''}`,
+              }
+    )
 
     if (!service) {
         return (

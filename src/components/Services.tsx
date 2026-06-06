@@ -64,8 +64,10 @@ const Services = () => {
                   <div className="w-full aspect-square rounded-2xl overflow-hidden mb-6">
                     <img
                       src={service.image}
-                      alt={service.title}
+                      alt={`${service.title} — software gestionale hAutomatico`}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
 

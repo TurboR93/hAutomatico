@@ -10,6 +10,7 @@ import ServiceDetail from './components/ServiceDetail'
 import ServicesPage from './components/ServicesPage'
 import About from './components/About'
 import { CursorFollower } from './components/motion'
+import { useSeo } from './hooks/useSeo'
 
 const BASE_URL = import.meta.env.BASE_URL
 
@@ -24,6 +25,12 @@ function ScrollToTop() {
 }
 
 function HomePage() {
+  useSeo({
+    title: 'hAutomatico — Software gestionali e automazione aziendale',
+    description:
+      'Sviluppiamo software gestionali e soluzioni di automazione e AI su misura per le PMI: gestione turni, e-commerce, noleggio, ristorazione, sicurezza cantiere e siti web.',
+    path: '/',
+  })
   return (
     <>
       <Header />

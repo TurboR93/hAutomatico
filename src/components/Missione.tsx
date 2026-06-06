@@ -14,6 +14,8 @@ const Missione = () => {
               src={`${BASE_URL}imgs/automazione-amministrativa.webp`}
               alt="Automazione amministrativa aziendale"
               className="w-full h-auto"
+              loading="lazy"
+              decoding="async"
             />
           </div>
 

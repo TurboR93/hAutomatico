@@ -50,6 +50,12 @@ const Hero = () => {
 
   return (
     <section ref={containerRef} className="bg-black relative" style={{ height: '280vh' }}>
+      {/* Single semantic H1 for SEO (the animated lines below are presentational) */}
+      <h1 className="sr-only">
+        hAutomatico — rivoluzioniamo la tecnologia al tuo servizio: software gestionali e
+        automazione aziendale su misura
+      </h1>
+
       {/* Fixed container that stays in view while scrolling, then releases */}
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         {/* Animated Geometric Background - Full Width */}
@@ -194,24 +200,27 @@ const Hero = () => {
         {/* Text Overlay Container - Stacked text lines */}
         <div className="relative z-10 flex items-center justify-center pointer-events-none px-6">
           <div className="flex flex-col items-center gap-0">
-            <motion.h1
+            <motion.p
+              aria-hidden="true"
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black uppercase text-[#FDF07A] drop-shadow-[0_8px_16px_rgba(0,0,0,0.8),0_0_20px_rgba(0,0,0,0.5)] leading-tight text-center"
               style={{ opacity: text1Opacity, y: text1Y }}
             >
               RIVOLUZIONIAMO
-            </motion.h1>
-            <motion.h1
+            </motion.p>
+            <motion.p
+              aria-hidden="true"
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black uppercase text-[#FDF07A] drop-shadow-[0_8px_16px_rgba(0,0,0,0.8),0_0_20px_rgba(0,0,0,0.5)] leading-tight text-center"
               style={{ opacity: text2Opacity, y: text2Y }}
             >
               LA TECNOLOGIA
-            </motion.h1>
-            <motion.h1
+            </motion.p>
+            <motion.p
+              aria-hidden="true"
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black uppercase text-[#FDF07A] drop-shadow-[0_8px_16px_rgba(0,0,0,0.8),0_0_20px_rgba(0,0,0,0.5)] leading-tight text-center"
               style={{ opacity: text3Opacity, y: text3Y }}
             >
               AL TUO SERVIZIO
-            </motion.h1>
+            </motion.p>
           </div>
         </div>
       </div>

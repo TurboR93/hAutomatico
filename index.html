@@ -16,13 +16,14 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#E63329" />
+    <meta name="theme-color" content="#D03F29" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.hautomatico.com/" />
     <meta property="og:title" content="hAutomatico — Software gestionali e automazione aziendale" />
     <meta property="og:description" content="Soluzioni software su misura per automatizzare la gestione della tua azienda: turni, e-commerce, noleggio, ristorazione, sicurezza cantiere e siti web." />
     <meta property="og:image" content="https://www.hautomatico.com/logohAutomatico-red.png" />
+    <meta property="og:image:alt" content="hAutomatico — software gestionali e automazione aziendale" />
     <meta property="og:locale" content="it_IT" />
     <meta property="og:site_name" content="hAutomatico" />
 
@@ -34,12 +35,60 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "hAutomatico",
-      "url": "https://www.hautomatico.com/",
-      "logo": "https://www.hautomatico.com/logohAutomatico-red.png",
-      "description": "Software gestionali e soluzioni di automazione su misura per aziende.",
-      "areaServed": "IT"
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.hautomatico.com/#organization",
+          "name": "hAutomatico",
+          "url": "https://www.hautomatico.com/",
+          "logo": "https://www.hautomatico.com/logohAutomatico-red.png",
+          "description": "Software gestionali e soluzioni di automazione su misura per aziende.",
+          "email": "info@hautomatico.com",
+          "areaServed": "IT",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Via Cucumero 13",
+            "addressLocality": "Vittorio Veneto",
+            "addressRegion": "TV",
+            "postalCode": "31029",
+            "addressCountry": "IT"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "info@hautomatico.com",
+            "contactType": "customer support",
+            "areaServed": "IT",
+            "availableLanguage": "Italian"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.hautomatico.com/#website",
+          "url": "https://www.hautomatico.com/",
+          "name": "hAutomatico",
+          "inLanguage": "it-IT",
+          "publisher": { "@id": "https://www.hautomatico.com/#organization" }
+        },
+        {
+          "@type": "ProfessionalService",
+          "@id": "https://www.hautomatico.com/#business",
+          "name": "hAutomatico",
+          "url": "https://www.hautomatico.com/",
+          "image": "https://www.hautomatico.com/logohAutomatico-red.png",
+          "email": "info@hautomatico.com",
+          "priceRange": "€€",
+          "areaServed": "IT",
+          "parentOrganization": { "@id": "https://www.hautomatico.com/#organization" },
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Via Cucumero 13",
+            "addressLocality": "Vittorio Veneto",
+            "addressRegion": "TV",
+            "postalCode": "31029",
+            "addressCountry": "IT"
+          }
+        }
+      ]
     }
     </script>
 

@@ -44,6 +44,8 @@ const Visione = () => {
               src={`${BASE_URL}imgs/digitalizzazione-documenti.webp`}
               alt="Digitalizzazione documenti cartacei"
               className="w-full h-auto"
+              loading="lazy"
+              decoding="async"
               style={{ scale }}
             />
           </motion.div>

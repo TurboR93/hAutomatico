@@ -12,6 +12,7 @@ import {
   DrawnPath,
   PALETTE,
 } from './motion'
+import { useSeo } from '../hooks/useSeo'
 
 const BASE_URL = import.meta.env.BASE_URL
 
@@ -46,6 +47,12 @@ const stats = [
 ]
 
 const About = () => {
+  useSeo({
+    title: 'Chi Siamo — hAutomatico | Automazione e AI per le PMI',
+    description:
+      'La "h" di hAutomatico richiama la costante di Planck: riduciamo ogni processo al suo quanto fondamentale. Scopri il metodo, i valori e dove operiamo nel Triveneto.',
+    path: '/about',
+  })
   return (
     <>
       {/* Hero + Metodo — unica sezione nera */}
@@ -125,8 +132,10 @@ const About = () => {
               >
                 <img
                   src={`${BASE_URL}imgs/architettura-software-aziendale.webp`}
-                  alt="Architettura software aziendale"
+                  alt="Architettura software aziendale su misura per PMI"
                   className="w-full h-auto"
+                  loading="lazy"
+                  decoding="async"
                 />
               </motion.div>
             </Reveal>
@@ -210,8 +219,10 @@ const About = () => {
               >
                 <img
                   src={`${BASE_URL}imgs/trasformazione-digitale-aziendale.webp`}
-                  alt="Trasformazione digitale aziendale"
+                  alt="Trasformazione digitale aziendale nel Triveneto"
                   className="w-full h-auto"
+                  loading="lazy"
+                  decoding="async"
                 />
               </motion.div>
             </Reveal>
