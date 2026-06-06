@@ -21,3 +21,16 @@ html {
   padding: 0;
 }
 
+/* Accessibility backstop: honor the OS "reduce motion" setting for any
+   animation that doesn't go through the Framer Motion primitives. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

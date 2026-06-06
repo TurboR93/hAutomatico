@@ -1,31 +1,33 @@
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { useRef } from 'react'
+import WavyDivider from './WavyDivider'
+import { GeometricField, RevealText, Reveal, AccentLine, PALETTE } from './motion'
 
 const BASE_URL = import.meta.env.BASE_URL
 
 const Visione = () => {
   const ref = useRef<HTMLDivElement>(null)
+  const reduce = useReducedMotion()
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start end', 'end start'],
   })
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2])
+  const scaleRaw = useTransform(scrollYProgress, [0, 1], [1, 1.2])
+  const scale = reduce ? 1 : scaleRaw
 
   return (
-    <section ref={ref} className="bg-black text-white relative">
-      <div className="container mx-auto px-6 py-20">
-        <motion.div
-          className="grid md:grid-cols-2 gap-12 items-center"
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
+    <section ref={ref} className="bg-black text-white relative overflow-hidden">
+      {/* Geometrie "quantum" — riusa lo scroll progress della sezione */}
+      <GeometricField variant="on-dark" density="medium" parallax progress={scrollYProgress} seed={2} />
+
+      <div className="container mx-auto px-6 py-20 relative z-10">
+        <Reveal y={50} className="grid md:grid-cols-2 gap-12 items-center">
           {/* Left - Text */}
           <div>
-            <h2 className="text-5xl md:text-6xl font-black uppercase text-[#D03F29] mb-6">
+            <RevealText as="h2" className="text-5xl md:text-6xl font-black uppercase text-[#D03F29] mb-4">
               VISIONE
-            </h2>
+            </RevealText>
+            <AccentLine color={PALETTE.red} width={130} className="mb-6" />
             <p className="text-lg md:text-xl leading-relaxed">
               La nostra visione è quella di diventare il punto di riferimento per
               l'adozione dedigitale nel tessuto industriale e commerciale,
@@ -45,31 +47,13 @@ const Visione = () => {
               style={{ scale }}
             />
           </motion.div>
-        </motion.div>
+        </Reveal>
       </div>
 
       {/* Wavy transition to Missione */}
-      <div className="absolute bottom-0 left-0 right-0 overflow-hidden" style={{ height: '120px', marginBottom: '-1px' }}>
-        <svg
-          viewBox="0 0 1440 120"
-          preserveAspectRatio="none"
-          className="absolute bottom-0 left-0 w-full h-full"
-          style={{ display: 'block' }}
-        >
-          <path
-            d="M0,40 C120,25 240,80 360,60 C480,40 600,90 720,65 C840,40 960,85 1080,62 C1200,40 1320,75 1440,55 L1440,120 L0,120 Z"
-            fill="#FDF07A"
-          />
-          <path
-            d="M0,70 C180,45 300,95 480,75 C660,55 780,100 960,80 C1140,60 1300,90 1440,70 L1440,120 L0,120 Z"
-            fill="#FDF07A"
-            opacity="0.6"
-          />
-        </svg>
-      </div>
+      <WavyDivider orientation="bottom" fromColor="#000000" toColor="#FDF07A" animate />
     </section>
   )
 }
 
 export default Visione
-

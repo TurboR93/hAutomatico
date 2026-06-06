@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion'
 import WavyDivider from './WavyDivider'
+import { GeometricField, MagneticButton } from './motion'
 
 const Footer = () => {
   return (
-    <footer className="bg-[#FDF07A] text-black relative" style={{ marginTop: '-1px' }}>
+    <footer className="bg-[#FDF07A] text-black relative overflow-hidden" style={{ marginTop: '-1px' }}>
       <WavyDivider fromColor="#D03F29" toColor="#FDF07A" />
-      <div className="container mx-auto px-4 py-4">
+      <GeometricField variant="on-yellow" density="low" seed={10} />
+      <div className="container mx-auto px-4 py-4 relative z-10">
         <motion.div
           className="flex flex-wrap items-start justify-between gap-4 mb-3"
           initial={{ opacity: 0, y: 20 }}
@@ -35,12 +37,14 @@ const Footer = () => {
           {/* Right - Contact */}
           <div>
             <h4 className="text-xs font-bold uppercase mb-1">Contatti</h4>
-            <a
-              href="mailto:info@hautomatico.com"
-              className="text-[10px] hover:text-[#D03F29] transition-colors"
-            >
-              info@hautomatico.com
-            </a>
+            <MagneticButton strength={0.4}>
+              <a
+                href="mailto:info@hautomatico.com"
+                className="text-[10px] hover:text-[#D03F29] transition-colors"
+              >
+                info@hautomatico.com
+              </a>
+            </MagneticButton>
           </div>
         </motion.div>
 
@@ -60,5 +64,3 @@ const Footer = () => {
 }
 
 export default Footer
-
-

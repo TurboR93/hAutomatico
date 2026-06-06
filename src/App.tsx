@@ -9,6 +9,7 @@ import Footer from './components/Footer'
 import ServiceDetail from './components/ServiceDetail'
 import ServicesPage from './components/ServicesPage'
 import About from './components/About'
+import { CursorFollower } from './components/motion'
 
 const BASE_URL = import.meta.env.BASE_URL
 
@@ -39,6 +40,7 @@ function App() {
   return (
     <BrowserRouter basename={BASE_URL}>
       <ScrollToTop />
+      <CursorFollower />
       <div className="min-h-screen">
         <Routes>
           <Route path="/" element={<HomePage />} />
