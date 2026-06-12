@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { services } from '../data/services'
 import Header from './Header'
 import Footer from './Footer'
@@ -13,9 +13,6 @@ const ServiceDetail = () => {
     const { serviceId } = useParams<{ serviceId: string }>()
     const service = services.find((s) => s.id === serviceId)
 
-    const priceNumber = service
-        ? Number(service.price.replace(/[^\d,]/g, '').replace(/\./g, '').replace(',', '.'))
-        : 0
     const serviceUrl = `${SITE}/servizi/${service?.id ?? ''}`
 
     useSeo(
@@ -38,13 +35,6 @@ const ServiceDetail = () => {
                               '@type': 'Organization',
                               name: 'hAutomatico',
                               url: `${SITE}/`,
-                          },
-                          offers: {
-                              '@type': 'Offer',
-                              price: priceNumber,
-                              priceCurrency: 'EUR',
-                              availability: 'https://schema.org/InStock',
-                              url: serviceUrl,
                           },
                       },
                       {
@@ -135,14 +125,13 @@ const ServiceDetail = () => {
                                 {service.title}
                             </RevealText>
                             <AccentLine color={PALETTE.red} width={130} className="mb-6" />
-                            <p className="mb-6 text-black">
-                                <span className="block text-base font-medium uppercase tracking-wider opacity-70">
-                                    a partire da
-                                </span>
-                                <span className="text-4xl font-bold">
-                                    {service.price}
-                                </span>
-                            </p>
+                            <a
+                                href="mailto:info@hautomatico.com"
+                                className="inline-flex items-center gap-2 text-xl font-bold uppercase text-[#D03F29] mb-6 hover:gap-4 transition-all"
+                            >
+                                Scopri di più
+                                <ArrowRight size={22} />
+                            </a>
                             <p className="text-lg md:text-xl leading-relaxed text-black/80">
                                 {service.fullDescription}
                             </p>

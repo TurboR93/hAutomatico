@@ -3,7 +3,6 @@ const BASE_URL = import.meta.env.BASE_URL
 export interface Service {
     id: string
     title: string
-    price: string
     shortDescription: string
     fullDescription: string
     features: string[]
@@ -15,7 +14,6 @@ export const services: Service[] = [
     {
         id: 'manager-tabelle-orari',
         title: 'Manager Tabelle Orari',
-        price: '€2.500,00',
         shortDescription:
             'Sistema intelligente per la gestione automatizzata dei turni e degli orari del personale.',
         fullDescription:
@@ -34,7 +32,6 @@ export const services: Service[] = [
     {
         id: 'gestionale-completo',
         title: 'Gestionale Completo',
-        price: '€18.000,00',
         shortDescription:
             'Suite gestionale enterprise con moduli integrati per ogni aspetto della tua azienda.',
         fullDescription:
@@ -54,7 +51,6 @@ export const services: Service[] = [
     {
         id: 'gestionale-ecommerce',
         title: 'Gestionale E-commerce',
-        price: '€9.600,00',
         shortDescription:
             'Piattaforma integrata per gestire il tuo negozio online con intelligenza artificiale.',
         fullDescription:
@@ -73,7 +69,6 @@ export const services: Service[] = [
     {
         id: 'ionoleggio',
         title: 'ioNoleggio',
-        price: '€7.500,00',
         shortDescription:
             'La soluzione completa per chi gestisce attività di noleggio veicoli e attrezzature.',
         fullDescription:
@@ -93,7 +88,6 @@ export const services: Service[] = [
     {
         id: 'miapizzeria',
         title: 'miaPizzeria',
-        price: '€5.200,00',
         shortDescription:
             'Gestionale dedicato alle pizzerie con ordini, consegne e gestione cucina integrati.',
         fullDescription:
@@ -113,7 +107,6 @@ export const services: Service[] = [
     {
         id: 'sito-web-standard',
         title: 'Sito Web Standard',
-        price: '€3.500,00',
         shortDescription:
             'Sito web professionale ottimizzato SEO e responsive, con form contatti e database integrato.',
         fullDescription:
@@ -133,7 +126,6 @@ export const services: Service[] = [
     {
         id: 'documentazione-sicurezza-cantiere',
         title: 'Documentazione Sicurezza Cantiere',
-        price: '€4.500,00',
         shortDescription:
             'Compilazione automatica delle schede di sicurezza con dati pescati da fonti diverse in base alla casistica.',
         fullDescription:
