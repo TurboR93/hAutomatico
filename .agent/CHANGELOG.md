@@ -1,5 +1,36 @@
 # hAutomatico - Change Log
 
+## [2026-06-12] Rimozione prezzi, P.IVA provvisoria, riallineamento docs
+
+### Changed
+- **Rimossi tutti i prezzi dal sito pubblico** (campo `price` eliminato da `src/data/services.ts` e dall'interfaccia `Service`)
+  - Card servizi: tolto il blocco "a partire da €…", resta la CTA "Scopri di più"
+  - Pagina dettaglio: al posto del prezzo un link "Scopri di più" (mailto:info@hautomatico.com)
+  - JSON-LD: rimosso il blocco `offers` (il prezzo non è più esposto nemmeno a Google)
+- **Footer**: P.IVA aggiornata a `05111993` — placeholder volutamente provvisorio (non è una P.IVA valida), da sostituire con quella reale
+- **Docs**: FEATURES.md riscritto e riallineato allo stato attuale; questo changelog recupera i mesi mancanti
+
+### Notes
+- info@hautomatico.com ora funziona: creato come alias di riccardo@ in Google Workspace (prima le mail rimbalzavano; il vecchio inoltro Squarespace non è mai stato attivo)
+
+---
+
+## [2026-01 → 2026-06] Riepilogo interventi non registrati qui (vedi git log)
+
+- **Sito pubblico**
+  - Pagina About ("Chi siamo"), nuovo logo, pagina `/servizi` dedicata, card interamente cliccabili
+  - 2 nuovi servizi: Sito Web Standard, Documentazione Sicurezza Cantiere (totale: 7)
+  - Immagini ottimizzate in .webp con nomi descrittivi
+  - Sistema animazioni "Quantum Geometry" (`src/components/motion/`) (8fa039e)
+  - SEO: meta per-route, schema arricchito, H1 unico, sitemap, robots.txt (a27f46e, ddaf9a6)
+- **Area Amministrazione** (nuova, su amministrazione.hautomatico.com — f6a4c7a e successivi)
+  - Gestionale con Panoramica, Movimenti, Preventivi, Fatture, Clienti, Abbonamenti, Ritenute
+  - Cloudflare Pages Functions + D1; allegati documenti su R2
+  - Ritenuta d'acconto (gross-up, soglia 5000 €/anno), ricorrenze anche pluriennali, proiezione rinnovi, tipo movimento "Spesa"
+  - Deploy unificato: `npm run deploy` (e05ea07)
+
+---
+
 ## [2026-01-09] Service Cards & Dedicated Pages
 
 ### Added
